@@ -43,7 +43,7 @@ export default function Home() {
   }, [code, getAccessToken]);
 
   if (!!useAuthStore.getState().accessToken) {
-    return <Container>hello</Container>;
+    return <Container>hello, STAGE</Container>;
   }
 
   return <Container>hello, STAGE</Container>;
