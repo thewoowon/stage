@@ -75,7 +75,7 @@ export default function Home() {
       >
         <LogoText />
       </div>
-      {isAuthenticated && <BackgroundVideo />}
+      <BackgroundVideo />
       <ButtonWrapper>
         <ButtonBox>
           <Button onClick={handleLogin}>구글로 시작</Button>

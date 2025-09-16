@@ -69,6 +69,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <YoutubeIcon />
         </div>
       </div>
+      <div></div>
     </Container>
   );
 };
