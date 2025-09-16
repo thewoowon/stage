@@ -1,10 +1,10 @@
-import { MenuIcon } from "@/components/svg";
+// import { MenuIcon } from "@/components/svg";
 import Logo from "@/components/svg/Logo";
 import styled from "@emotion/styled";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 const Header = () => {
-  const router = useRouter();
+  // const router = useRouter();
   return (
     <Container>
       <LogoButton
@@ -14,13 +14,13 @@ const Header = () => {
       >
         <Logo fontColor="white" />
       </LogoButton>
-      <MenuButton
+      {/* <MenuButton
         onClick={() => {
           router.push("/my");
         }}
       >
         <MenuIcon />
-      </MenuButton>
+      </MenuButton> */}
     </Container>
   );
 };
@@ -29,10 +29,6 @@ export default Header;
 
 const Container = styled.div`
   width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -40,7 +36,7 @@ const Container = styled.div`
   padding-right: 16px;
   padding-left: 16px;
   height: 57px;
-  background-color: transparent;
+  background-color: white;
 `;
 
 const LogoButton = styled.div`
@@ -57,6 +53,7 @@ const LogoButton = styled.div`
   }
 `;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MenuButton = styled.div`
   display: flex;
   align-items: center;

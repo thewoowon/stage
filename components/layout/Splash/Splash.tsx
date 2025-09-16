@@ -90,7 +90,7 @@ const Container = styled.div`
   background-color: white;
   z-index: 200;
   animation: fadeOut 1s ease-in-out 1s forwards;
-
+  padding-bottom: 100px;
   @keyframes fadeOut {
     from {
       opacity: 1;

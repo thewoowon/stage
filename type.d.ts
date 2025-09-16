@@ -71,6 +71,29 @@ declare global {
     transcript: string;
     confidence: number;
   }
+
+  type ArtistType = {
+    id: number;
+    name: string;
+    profileImage: string;
+    thumbnailImage: string;
+    description: string;
+    followersCount: number;
+    isFollowing: boolean;
+    level: number;
+    score: number;
+    tags: string[];
+  };
+
+  type ProjectType = {
+    id: number;
+    title: string;
+    thumbnailImage: string;
+    description: string;
+    likesCount: number;
+    isLiked: boolean;
+    artist: ArtistType[];
+  };
 }
 
 export type {

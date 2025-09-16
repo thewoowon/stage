@@ -1,10 +1,9 @@
 // lib/customAxios.ts
 import axios from "axios";
-import { useAuthStore } from "@/stores/authStore";
 
 const customAxios = axios.create({
-  baseURL: "https://api.sfgdai.com",
-  timeout: 60000,
+  baseURL: "https://api.thisismystage.com",
+  timeout: 10000,
 });
 
 let isRefreshing = false;
@@ -20,9 +19,24 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+// === 외부에서 주입할 함수 (AuthContext에서 attach) ===
+let getToken: () => string | null = () => null;
+let setToken: (t: string | null) => void = () => {};
+let logout: () => void = () => {};
+
+export const attachAuthHelpers = (helpers: {
+  getToken: () => string | null;
+  setToken: (t: string | null) => void;
+  logout: () => void;
+}) => {
+  getToken = helpers.getToken;
+  setToken = helpers.setToken;
+  logout = helpers.logout;
+};
+
 // 요청 인터셉터
 customAxios.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken;
+  const token = getToken();
   if (token && !config.url?.startsWith("auth")) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -34,7 +48,6 @@ customAxios.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
-    const { logout, setAccessToken } = useAuthStore.getState();
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -54,12 +67,12 @@ customAxios.interceptors.response.use(
 
       isRefreshing = true;
       try {
-        const res = await customAxios.post("/auth/token/reissue"); // refreshToken은 쿠키로 자동 전송
+        const res = await customAxios.post("/auth/token/reissue"); // refreshToken은 쿠키 자동 전송
         const newAccessToken = res.data.accessToken;
 
         if (!newAccessToken) throw new Error("토큰 재발급 실패");
 
-        setAccessToken(newAccessToken);
+        setToken(newAccessToken);
         processQueue(null, newAccessToken);
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;

@@ -3,14 +3,21 @@ import styled from "@emotion/styled";
 import { COLORS } from "@/styles/color";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect } from "react";
-import { useAuthStore } from "@/stores/authStore";
 import customAxios from "@/lib/axios";
+import { useAuth } from "@/contexts/AuthContext"; // ✅ Context 기반
+import BackgroundVideo from "@/components/module/BackgroundVideo";
+import { LogoText } from "@/components/svg";
+import SearchMainView from "@/components/view/SearchMainView";
 
 export default function Home() {
+  const router = useRouter();
   const params = useSearchParams();
   const code = params.get("code");
-  const router = useRouter();
 
+  // ✅ AuthContext 훅 사용
+  const { accessToken, setAccessToken, isAuthenticated } = useAuth();
+
+  // ✅ 서버에서 Access Token 발급
   const getAccessToken = useCallback(async () => {
     if (!code) return;
     try {
@@ -18,13 +25,11 @@ export default function Home() {
         params: { code },
       });
 
-      console.log("로그인 응답:", response.headers);
-      console.log(response.headers["accesstoken"]);
-      console.log(response.headers["accesstoken"]);
       if (response.status === 200) {
         console.log("로그인 성공");
-        useAuthStore.getState().setAccessToken(response.headers["accesstoken"]);
-        localStorage.setItem("refreshToken", response.headers["accesstoken"]);
+        const token = response.headers["accesstoken"];
+        setAccessToken(token);
+        localStorage.setItem("refreshToken", response.headers["refreshtoken"]);
       } else {
         alert("로그인에 실패했습니다. 다시 시도해주세요.");
       }
@@ -34,19 +39,50 @@ export default function Home() {
       alert("로그인에 실패했습니다. 다시 시도해주세요.");
       router.replace("/");
     }
-  }, [code, router]);
+  }, [code, router, setAccessToken]);
 
+  // ✅ 테스트용 버튼
+  const handleLogin = () => {
+    setAccessToken("1");
+    localStorage.setItem("refreshToken", "dummy-refresh");
+  };
+
+  // ✅ 최초 진입 시 code 있으면 토큰 요청
   useEffect(() => {
     if (code) {
       getAccessToken();
     }
   }, [code, getAccessToken]);
 
-  if (!!useAuthStore.getState().accessToken) {
-    return <Container>hello, STAGE</Container>;
+  // ✅ 인증 상태에 따라 분기 렌더링
+  if (isAuthenticated) {
+    return <SearchMainView />;
   }
 
-  return <Container>hello, STAGE</Container>;
+  return (
+    <Container>
+      <div
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 1,
+          paddingBottom: "100px",
+        }}
+      >
+        <LogoText />
+      </div>
+      {isAuthenticated && <BackgroundVideo />}
+      <ButtonWrapper>
+        <ButtonBox>
+          <Button onClick={handleLogin}>구글로 시작</Button>
+        </ButtonBox>
+      </ButtonWrapper>
+    </Container>
+  );
 }
 
 const Container = styled.main`
@@ -58,7 +94,6 @@ const Container = styled.main`
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
-  padding-top: 57px;
   overflow-x: hidden;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
@@ -67,13 +102,48 @@ const Container = styled.main`
   }
   scrollbar-width: none;
   -ms-overflow-style: none; /* IE and Edge */
-  @media (max-width: 768px) {
-    padding-top: 50px;
+`;
+
+const ButtonBox = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-left: 20px;
+  padding-right: 20px;
+`;
+
+const Button = styled.button`
+  z-index: 1;
+  width: 100%;
+  height: 48px;
+  background-color: #111111;
+  color: #ff6828;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -2%;
+  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #191919;
   }
-  @media (max-width: 480px) {
-    padding-top: 40px;
+
+  &:disabled {
+    background-color: ${COLORS.grayscale[200]};
+    color: ${COLORS.grayscale[500]};
+    cursor: not-allowed;
   }
-  @media (max-width: 360px) {
-    padding-top: 30px;
-  }
+`;
+
+const ButtonWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: absolute;
+  bottom: 20px;
+  gap: 12px;
 `;
