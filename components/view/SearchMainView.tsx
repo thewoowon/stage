@@ -132,6 +132,10 @@ export const PROJECT_DATA: ProjectType[] = [
     likesCount: 150,
     isLiked: false,
     artist: [ARTIST_DATA[2], ARTIST_DATA[4]],
+    tags: ["뮤지컬", "연극"],
+    deadline: "2025-10-09",
+    company: "주식회사 피에치이엔엠 (PH E&M)",
+    caster: "홍길동",
   },
   {
     id: 1,
@@ -142,6 +146,10 @@ export const PROJECT_DATA: ProjectType[] = [
     likesCount: 200,
     isLiked: true,
     artist: [ARTIST_DATA[0], ARTIST_DATA[3]],
+    tags: ["클래식", "콘서트"],
+    deadline: "2025-11-15",
+    company: "클래식 컴퍼니",
+    caster: "김영희",
   },
   {
     id: 2,
@@ -151,6 +159,10 @@ export const PROJECT_DATA: ProjectType[] = [
     likesCount: 100,
     isLiked: false,
     artist: [ARTIST_DATA[1]],
+    tags: ["현대무용", "발레"],
+    deadline: "2025-12-01",
+    company: "댄스 컴퍼니",
+    caster: "이민수",
   },
 ];
 
@@ -332,8 +344,11 @@ const ProjectList = ({ project }: { project: ProjectType[] }) => {
 };
 
 const ProjectCard = ({ project }: { project: ProjectType }) => {
+  const router = useRouter();
   return (
-    <ProjectCardContainer>
+    <ProjectCardContainer
+      onClick={() => router.push(`/search/project/${project.id}`)}
+    >
       <div style={{ position: "relative", width: "100%", height: "164px" }}>
         <Image
           src={project.thumbnailImage}
@@ -428,7 +443,9 @@ const SearchMainView = () => {
       <Header />
       <ArtistProjectButtonContainer>
         <ArtistProjectButton
-          style={{ ...TYPOGRAPHY.body1["semiBold"] }}
+          style={{
+            ...TYPOGRAPHY.body1[viewMode === "artist" ? "semiBold" : "regular"],
+          }}
           onClick={() => {
             handleModeChange("artist");
           }}
@@ -437,6 +454,11 @@ const SearchMainView = () => {
           아티스트
         </ArtistProjectButton>
         <ArtistProjectButton
+          style={{
+            ...TYPOGRAPHY.body1[
+              viewMode === "project" ? "semiBold" : "regular"
+            ],
+          }}
           onClick={() => {
             handleModeChange("project");
           }}

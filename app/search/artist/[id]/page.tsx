@@ -1,10 +1,10 @@
 "use client";
 import styled from "@emotion/styled";
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import { ARTIST_DATA } from "@/components/view/SearchMainView";
 import { LeftChevronIcon } from "@/components/svg";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { TYPOGRAPHY } from "@/styles/typography";
 import { COLORS } from "@/styles/color";
 import InstagramIcon from "@/components/svg/InstagramIcon";
@@ -153,26 +153,38 @@ const ArtistCardContainer = styled.div`
 `;
 
 const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
+  const searchParams = useSearchParams();
+  const status = searchParams.get("status");
   const { id } = use(params);
   const router = useRouter();
   const { user } = useUser();
+  const [open, setOpen] = useState(false);
 
   const [imageOverlayVisible, setImageOverlayVisible] = useState(false);
   const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
 
+  const artist = ARTIST_DATA.find((artist) => artist.id === Number(id));
+
+  useEffect(() => {
+    if (status === "connected") {
+      setOpen(true);
+    }
+  }, [status]);
+
+  if (!artist) {
+    return <div>Artist not found</div>;
+  }
+
   const handleConnection = () => {
+    router.push(`/connection/artist/${id}/send`);
+    return;
     if (user.role === "AR") {
       window.location.href =
         "https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=email%20profile&access_type=offline&prompt=consent";
     } else {
-      alert("아티스트 계정으로 로그인해주세요.");
+      router.push(`/connection/artist/${id}/send`);
     }
   };
-
-  const artist = ARTIST_DATA.find((artist) => artist.id === Number(id));
-  if (!artist) {
-    return <div>Artist not found</div>;
-  }
 
   return (
     <Container>
@@ -525,9 +537,11 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           ))}
         </HorizontalThemeScrollContainer>
       </div>
-      <ButtonBox>
-        <Button onClick={handleConnection}>구글로 시작</Button>
-      </ButtonBox>
+      {user.role === "AR" && (
+        <ButtonBox>
+          <Button onClick={handleConnection}>연결 보내기</Button>
+        </ButtonBox>
+      )}
       {imageOverlayVisible && (
         <ImageOverlay>
           <ShadowHeader>
@@ -574,6 +588,27 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
         </VideoOverlay>
       )}
+      <Modal style={{ display: open ? "flex" : "none" }}>
+        <MessageBox>
+          <div>
+            연결이 성공적으로
+            <br />
+            전송되었습니다
+          </div>
+          <MessageBoxButton
+            style={{
+              ...TYPOGRAPHY.body1.medium,
+              backgroundColor: COLORS.grayscale[1100],
+              color: COLORS.grayscale[100],
+            }}
+            onClick={() => {
+              setOpen(false);
+            }}
+          >
+            확인
+          </MessageBoxButton>
+        </MessageBox>
+      </Modal>
     </Container>
   );
 };
@@ -637,6 +672,7 @@ const Divider = styled.div`
   height: 8px;
   background-color: #f4f4f4;
   margin: 16px 0;
+  flex-shrink: 0;
 `;
 
 const ButtonBox = styled.div`
@@ -665,7 +701,7 @@ const Button = styled.button`
   cursor: pointer;
 
   &:hover {
-    background-color: #191919;
+    background-color: ${COLORS.primary[600]};
   }
 
   &:disabled {
@@ -748,4 +784,42 @@ const VideoOverlay = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 20;
+`;
+
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 26px;
+`;
+
+const MessageBox = styled.div`
+  width: 324px;
+  background-color: white;
+  color: ${COLORS.grayscale[1300]};
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+`;
+
+const MessageBoxButton = styled.div`
+  flex: 1;
+  width: 100%;
+  height: 46px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
 `;

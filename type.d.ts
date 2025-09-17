@@ -97,6 +97,10 @@ declare global {
     likesCount: number;
     isLiked: boolean;
     artist: ArtistType[];
+    tags: string[];
+    deadline: string;
+    company: string;
+    caster: string;
   };
 }
 

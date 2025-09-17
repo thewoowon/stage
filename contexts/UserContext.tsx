@@ -24,7 +24,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     role: "AR" | "CD";
     name: string;
   }>({
-    role: "AR",
+    role: "CD",
     name: "김아티스트",
   });
 
