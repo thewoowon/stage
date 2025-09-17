@@ -8,6 +8,7 @@ import useLoading from "@/hooks/useLoading";
 import Splash from "@/components/layout/Splash";
 import Bounce from "@/components/element/bounce";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { UserProvider } from "@/contexts/UserContext";
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const loading = useLoading();
@@ -150,7 +151,9 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
           }}
         >
           {loading && <div>로딩 중...</div>}
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <UserProvider>{children}</UserProvider>
+          </AuthProvider>
           {/* {isFirstVisit && <OnBoarding />} */}
           {isSplashVisible && <Splash />}
         </div>

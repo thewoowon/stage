@@ -20,6 +20,10 @@ export const ARTIST_DATA: ArtistType[] = [
     level: 5,
     score: 1500,
     tags: ["팝", "재즈", "클래식"],
+    height: 180,
+    weight: 75,
+    birthDate: "1990-01-01",
+    specialty: ["보컬", "작곡"],
   },
   {
     id: 1,
@@ -32,6 +36,10 @@ export const ARTIST_DATA: ArtistType[] = [
     level: 3,
     score: 900,
     tags: ["현대무용", "발레"],
+    height: 175,
+    weight: 65,
+    birthDate: "1992-05-15",
+    specialty: ["댄서"],
   },
   {
     id: 2,
@@ -44,6 +52,10 @@ export const ARTIST_DATA: ArtistType[] = [
     level: 2,
     score: 600,
     tags: ["뮤지컬", "연극"],
+    height: 165,
+    weight: 50,
+    birthDate: "1995-03-22",
+    specialty: ["배우", "보컬"],
   },
   {
     id: 3,
@@ -56,6 +68,10 @@ export const ARTIST_DATA: ArtistType[] = [
     level: 4,
     score: 800,
     tags: ["클래식", "오페라"],
+    height: 170,
+    weight: 55,
+    birthDate: "1988-11-30",
+    specialty: ["성악"],
   },
   {
     id: 4,
@@ -68,6 +84,10 @@ export const ARTIST_DATA: ArtistType[] = [
     level: 3,
     score: 700,
     tags: ["연극", "뮤지컬"],
+    height: 178,
+    weight: 70,
+    birthDate: "1991-07-10",
+    specialty: ["배우"],
   },
   {
     id: 5,
@@ -80,6 +100,10 @@ export const ARTIST_DATA: ArtistType[] = [
     level: 2,
     score: 500,
     tags: ["서커스", "마술"],
+    height: 160,
+    weight: 48,
+    birthDate: "1993-09-18",
+    specialty: ["마술사"],
   },
   {
     id: 6,
@@ -92,6 +116,10 @@ export const ARTIST_DATA: ArtistType[] = [
     level: 1,
     score: 300,
     tags: ["국악", "판소리"],
+    height: 162,
+    weight: 50,
+    birthDate: "1994-12-05",
+    specialty: ["국악인"],
   },
 ];
 

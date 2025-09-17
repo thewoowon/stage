@@ -83,6 +83,10 @@ declare global {
     level: number;
     score: number;
     tags: string[];
+    height?: number;
+    weight?: number;
+    birthDate?: string;
+    specialty?: string[];
   };
 
   type ProjectType = {

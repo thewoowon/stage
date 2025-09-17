@@ -2,17 +2,13 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 
 type UserContextType = {
   user: {
-    userId: number | null;
-    email: string;
-    profileImage: string;
-    nickname: string;
+    role: "AR" | "CD";
+    name: string;
   };
   setUser: React.Dispatch<
     React.SetStateAction<{
-      userId: number | null;
-      email: string;
-      profileImage: string;
-      nickname: string;
+      role: "AR" | "CD";
+      name: string;
     }>
   >;
 };
@@ -25,15 +21,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<{
-    userId: number | null;
-    email: string;
-    profileImage: string;
-    nickname: string;
+    role: "AR" | "CD";
+    name: string;
   }>({
-    userId: null,
-    email: "",
-    profileImage: "",
-    nickname: "",
+    role: "AR",
+    name: "김아티스트",
   });
 
   return (
