@@ -5,6 +5,7 @@ import customAxios from "@/lib/axios";
 import { COLORS } from "@/styles/color";
 import { TYPOGRAPHY } from "@/styles/typography";
 import styled from "@emotion/styled";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 const SENT_PROJECT_DATA = [
@@ -58,6 +59,7 @@ const SentList = ({
   category: number | null;
   data: (SimpleArtistType | SimpleProjectType)[];
 }) => {
+  const router = useRouter();
   if (data.length === 0) {
     return (
       <div
@@ -93,7 +95,15 @@ const SentList = ({
         {newProjectData.map((item) => (
           <div
             key={item.id}
-            style={{ width: "100%", display: "flex", gap: "10px" }}
+            style={{
+              width: "100%",
+              display: "flex",
+              gap: "10px",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              router.push(`/connection/project/${item.id}/send`);
+            }}
           >
             <div
               style={{
@@ -179,7 +189,15 @@ const SentList = ({
       {newArtistData.map((item) => (
         <div
           key={item.id}
-          style={{ width: "100%", display: "flex", gap: "10px" }}
+          style={{
+            width: "100%",
+            display: "flex",
+            gap: "10px",
+            cursor: "pointer",
+          }}
+          onClick={() => {
+            router.push(`/connection/artist/${item.id}/send`);
+          }}
         >
           <div
             style={{
