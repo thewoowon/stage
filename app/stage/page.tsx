@@ -13,6 +13,7 @@ import { useUser } from "@/contexts/UserContext";
 import EditorIcon from "@/components/svg/EditorIcon";
 import { useQuery } from "@tanstack/react-query";
 import customAxios from "@/lib/axios";
+import GNB from "@/components/layout/GNB";
 
 const AI_RECOMMENDED_ARTISTS: ArtistType[] = [
   {
@@ -171,12 +172,7 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { data: myStageData, isLoading } = useQuery({
     queryKey: ["myStage"],
     queryFn: async () => {
-      const response = await customAxios.get(`/api/stage/getMyArtistStage`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer 1`,
-        },
-      });
+      const response = await customAxios.get(`/api/stage/getMyArtistStage`, {});
       if (response.status !== 200) {
         throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
       }
@@ -198,13 +194,427 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
     return <div>Artist not found</div>;
   }
 
-  if (isLoading) {
+  if (false) {
     return <div>Loading...</div>;
   }
 
   if (user.category === 1) {
     return (
       <Container>
+        <OuterBox>
+          <ShadowHeader>
+            <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
+              <LeftChevronIcon fill="#FFFFFF" />
+            </div>
+            <div
+              onClick={() => router.push("/stage/edit/profile")}
+              style={{ cursor: "pointer" }}
+            >
+              <EditorIcon />
+            </div>
+          </ShadowHeader>
+          <ImageWrapper
+            style={{
+              backgroundColor: COLORS.grayscale[200],
+            }}
+          >
+            <Image
+              src={artist.profileImage}
+              alt={artist.name}
+              fill
+              sizes="100%"
+              style={{ objectFit: "cover" }}
+              priority
+            />
+          </ImageWrapper>
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              flexDirection: "column",
+              gap: 4,
+              padding: "25px 16px",
+            }}
+          >
+            <div
+              style={{
+                ...TYPOGRAPHY.body1["medium"],
+                color: COLORS.grayscale[1300],
+              }}
+            >
+              레벨
+              {artist.level} | {artist.score}
+            </div>
+            <div
+              style={{
+                ...TYPOGRAPHY.h2["bold"],
+              }}
+            >
+              {artist.name}
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <InstagramIcon />
+              <YoutubeIcon />
+            </div>
+          </div>
+          <div style={{ padding: "0 16px", width: "100%" }}>
+            <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
+              <div
+                style={{
+                  width: "50px",
+                  ...TYPOGRAPHY.caption["medium"],
+                  color: COLORS.grayscale[700],
+                }}
+              >
+                생년
+              </div>
+              <div>{artist.birthDate}</div>
+            </Flex>
+            <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
+              <div
+                style={{
+                  width: "50px",
+                  ...TYPOGRAPHY.caption["medium"],
+                  color: COLORS.grayscale[700],
+                }}
+              >
+                신장
+              </div>
+              <div>{artist.height} cm</div>
+            </Flex>
+            <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
+              <div
+                style={{
+                  width: "50px",
+                  ...TYPOGRAPHY.caption["medium"],
+                  color: COLORS.grayscale[700],
+                }}
+              >
+                체중
+              </div>
+              <div>{artist.weight} kg</div>
+            </Flex>
+            <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
+              <div
+                style={{
+                  width: "50px",
+                  ...TYPOGRAPHY.caption["medium"],
+                  color: COLORS.grayscale[700],
+                }}
+              >
+                특기
+              </div>
+              <div>
+                {Array.isArray(artist.specialty)
+                  ? artist.specialty.join(", ")
+                  : "없음"}
+              </div>
+            </Flex>
+            <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
+              <div
+                style={{
+                  width: "50px",
+                  ...TYPOGRAPHY.caption["medium"],
+                  color: COLORS.grayscale[700],
+                }}
+              >
+                분야
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {artist.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    style={{
+                      ...TYPOGRAPHY.caption["medium"],
+                      color: COLORS.grayscale[100],
+                      backgroundColor: COLORS.primary[500],
+                      padding: "2px 6px",
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </Flex>
+          </div>
+          <Divider />
+          <div style={{ padding: "0 16px", width: "100%" }}>
+            <Title
+              style={{
+                ...TYPOGRAPHY.h4["bold"],
+              }}
+            >
+              공식 SNS
+              <div
+                onClick={() => router.push("/stage/edit/sns")}
+                style={{ cursor: "pointer" }}
+              >
+                <EditorIcon fill="black" />
+              </div>
+            </Title>
+            <HorizontalThemeScrollContainer>
+              <SnsCard
+                onClick={() => {
+                  setImageOverlayVisible(true);
+                }}
+              >
+                <div
+                  style={{
+                    position: "relative",
+                    width: "190px",
+                    height: "210px",
+                  }}
+                >
+                  <Image
+                    src="/images/oblong-profiles/men/man-1.png"
+                    alt="Instagram"
+                    fill
+                    sizes="100%"
+                    style={{ objectFit: "cover" }}
+                    priority
+                  />
+                </div>
+                <FlexRow
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.body2["regular"],
+                    }}
+                  >
+                    Instagram
+                  </div>
+                  <InstagramIcon width={20} height={20} />
+                </FlexRow>
+              </SnsCard>
+              <SnsCard
+                onClick={() => {
+                  setVideoOverlayVisible(true);
+                }}
+              >
+                <div
+                  style={{
+                    position: "relative",
+                    width: "190px",
+                    height: "210px",
+                  }}
+                >
+                  <Image
+                    src="/images/oblong-profiles/men/man-1.png"
+                    alt="Instagram"
+                    fill
+                    sizes="100%"
+                    style={{ objectFit: "cover" }}
+                    priority
+                  />
+                </div>
+                <FlexRow
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.body2["regular"],
+                    }}
+                  >
+                    Youtube
+                  </div>
+                  <YoutubeIcon width={20} height={20} />
+                </FlexRow>
+              </SnsCard>
+            </HorizontalThemeScrollContainer>
+          </div>
+          <Divider />
+          <div style={{ padding: "0 16px", width: "100%" }}>
+            <Title
+              style={{
+                ...TYPOGRAPHY.h4["bold"],
+              }}
+            >
+              KOPIS 포트폴리오
+            </Title>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              <PortfolioBox>
+                <FlexRow style={{ gap: 6 }}>
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.caption["medium"],
+                      color: COLORS.grayscale[100],
+                      backgroundColor: COLORS.grayscale[1300],
+                      padding: "2px 6px",
+                    }}
+                  >
+                    연극
+                  </div>
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.body2["semiBold"],
+                    }}
+                  >
+                    공연명
+                  </div>
+                </FlexRow>
+                <FlexRow
+                  style={{
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  2023.09.21 ~ 2023.09.21
+                </FlexRow>
+                <FlexRow
+                  style={{
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  공연장명: 대학로 아트홀
+                </FlexRow>
+              </PortfolioBox>
+              <PortfolioBox>
+                <FlexRow style={{ gap: 6 }}>
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.caption["medium"],
+                      color: COLORS.grayscale[100],
+                      backgroundColor: COLORS.grayscale[1300],
+                      padding: "2px 6px",
+                    }}
+                  >
+                    연극
+                  </div>
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.body2["semiBold"],
+                    }}
+                  >
+                    공연명
+                  </div>
+                </FlexRow>
+                <FlexRow
+                  style={{
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  2023.09.21 ~ 2023.09.21
+                </FlexRow>
+                <FlexRow
+                  style={{
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  공연장명: 대학로 아트홀
+                </FlexRow>
+              </PortfolioBox>
+              <PortfolioBox>
+                <FlexRow style={{ gap: 6 }}>
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.caption["medium"],
+                      color: COLORS.grayscale[100],
+                      backgroundColor: COLORS.grayscale[1300],
+                      padding: "2px 6px",
+                    }}
+                  >
+                    연극
+                  </div>
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.body2["semiBold"],
+                    }}
+                  >
+                    공연명
+                  </div>
+                </FlexRow>
+                <FlexRow
+                  style={{
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  2023.09.21 ~ 2023.09.21
+                </FlexRow>
+                <FlexRow
+                  style={{
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  공연장명: 대학로 아트홀
+                </FlexRow>
+              </PortfolioBox>
+            </div>
+          </div>
+          {imageOverlayVisible && (
+            <ImageOverlay>
+              <ShadowHeader>
+                <div
+                  onClick={() => {
+                    setImageOverlayVisible(false);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <LeftChevronIcon fill="#FFFFFF" />
+                </div>
+              </ShadowHeader>
+              <div style={{ width: "100%", height: "100%" }}>
+                <Image
+                  src="/images/oblong-profiles/women/woman-1.png"
+                  alt="Profile"
+                  fill
+                  sizes="100%"
+                  style={{ objectFit: "contain" }}
+                  priority
+                />
+              </div>
+            </ImageOverlay>
+          )}
+          {videoOverlayVisible && (
+            <VideoOverlay>
+              <ShadowHeader>
+                <div
+                  onClick={() => {
+                    setVideoOverlayVisible(false);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <LeftChevronIcon fill="#FFFFFF" />
+                </div>
+              </ShadowHeader>
+              <div style={{ width: "100%", height: "100%" }}>
+                <video
+                  src="/videos/cute_woman_audition.mp4"
+                  controls
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                  autoPlay
+                />
+              </div>
+            </VideoOverlay>
+          )}
+        </OuterBox>
+        <GNB />
+      </Container>
+    );
+  }
+
+  return (
+    <Container>
+      <OuterBox>
         <ShadowHeader>
           <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
             <LeftChevronIcon fill="#FFFFFF" />
@@ -222,7 +632,7 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
           }}
         >
           <Image
-            src={artist.profileImage}
+            src={"/images/square-profiles/thumbnail/cd-bg.png"}
             alt={artist.name}
             fill
             sizes="100%"
@@ -237,7 +647,6 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
             justifyContent: "center",
             alignItems: "flex-start",
             flexDirection: "column",
-            gap: 4,
             padding: "25px 16px",
           }}
         >
@@ -247,8 +656,8 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               color: COLORS.grayscale[1300],
             }}
           >
-            레벨
-            {artist.level} | {artist.score}
+            소속사명
+            {artist.level}
           </div>
           <div
             style={{
@@ -257,90 +666,6 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
           >
             {artist.name}
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <InstagramIcon />
-            <YoutubeIcon />
-          </div>
-        </div>
-        <div style={{ padding: "0 16px", width: "100%" }}>
-          <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
-            <div
-              style={{
-                width: "50px",
-                ...TYPOGRAPHY.caption["medium"],
-                color: COLORS.grayscale[700],
-              }}
-            >
-              생년
-            </div>
-            <div>{artist.birthDate}</div>
-          </Flex>
-          <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
-            <div
-              style={{
-                width: "50px",
-                ...TYPOGRAPHY.caption["medium"],
-                color: COLORS.grayscale[700],
-              }}
-            >
-              신장
-            </div>
-            <div>{artist.height} cm</div>
-          </Flex>
-          <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
-            <div
-              style={{
-                width: "50px",
-                ...TYPOGRAPHY.caption["medium"],
-                color: COLORS.grayscale[700],
-              }}
-            >
-              체중
-            </div>
-            <div>{artist.weight} kg</div>
-          </Flex>
-          <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
-            <div
-              style={{
-                width: "50px",
-                ...TYPOGRAPHY.caption["medium"],
-                color: COLORS.grayscale[700],
-              }}
-            >
-              특기
-            </div>
-            <div>
-              {Array.isArray(artist.specialty)
-                ? artist.specialty.join(", ")
-                : "없음"}
-            </div>
-          </Flex>
-          <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
-            <div
-              style={{
-                width: "50px",
-                ...TYPOGRAPHY.caption["medium"],
-                color: COLORS.grayscale[700],
-              }}
-            >
-              분야
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {artist.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  style={{
-                    ...TYPOGRAPHY.caption["medium"],
-                    color: COLORS.grayscale[100],
-                    backgroundColor: COLORS.primary[500],
-                    padding: "2px 6px",
-                  }}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </Flex>
         </div>
         <Divider />
         <div style={{ padding: "0 16px", width: "100%" }}>
@@ -349,101 +674,7 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               ...TYPOGRAPHY.h4["bold"],
             }}
           >
-            공식 SNS
-            <div
-              onClick={() => router.push("/stage/edit/sns")}
-              style={{ cursor: "pointer" }}
-            >
-              <EditorIcon fill="black" />
-            </div>
-          </Title>
-          <HorizontalThemeScrollContainer>
-            <SnsCard
-              onClick={() => {
-                setImageOverlayVisible(true);
-              }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  width: "190px",
-                  height: "210px",
-                }}
-              >
-                <Image
-                  src="/images/oblong-profiles/men/man-1.png"
-                  alt="Instagram"
-                  fill
-                  sizes="100%"
-                  style={{ objectFit: "cover" }}
-                  priority
-                />
-              </div>
-              <FlexRow
-                style={{
-                  width: "100%",
-                  padding: "10px 14px",
-                  justifyContent: "space-between",
-                }}
-              >
-                <div
-                  style={{
-                    ...TYPOGRAPHY.body2["regular"],
-                  }}
-                >
-                  Instagram
-                </div>
-                <InstagramIcon width={20} height={20} />
-              </FlexRow>
-            </SnsCard>
-            <SnsCard
-              onClick={() => {
-                setVideoOverlayVisible(true);
-              }}
-            >
-              <div
-                style={{
-                  position: "relative",
-                  width: "190px",
-                  height: "210px",
-                }}
-              >
-                <Image
-                  src="/images/oblong-profiles/men/man-1.png"
-                  alt="Instagram"
-                  fill
-                  sizes="100%"
-                  style={{ objectFit: "cover" }}
-                  priority
-                />
-              </div>
-              <FlexRow
-                style={{
-                  width: "100%",
-                  padding: "10px 14px",
-                  justifyContent: "space-between",
-                }}
-              >
-                <div
-                  style={{
-                    ...TYPOGRAPHY.body2["regular"],
-                  }}
-                >
-                  Youtube
-                </div>
-                <YoutubeIcon width={20} height={20} />
-              </FlexRow>
-            </SnsCard>
-          </HorizontalThemeScrollContainer>
-        </div>
-        <Divider />
-        <div style={{ padding: "0 16px", width: "100%" }}>
-          <Title
-            style={{
-              ...TYPOGRAPHY.h4["bold"],
-            }}
-          >
-            KOPIS 포트폴리오
+            진행중인 프로젝트
           </Title>
           <div
             style={{
@@ -452,7 +683,7 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               gap: 8,
             }}
           >
-            <PortfolioBox>
+            <PortfolioBox onClick={() => router.push("/search/project/0")}>
               <FlexRow style={{ gap: 6 }}>
                 <div
                   style={{
@@ -487,7 +718,7 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 공연장명: 대학로 아트홀
               </FlexRow>
             </PortfolioBox>
-            <PortfolioBox>
+            <PortfolioBox onClick={() => router.push("/search/project/1")}>
               <FlexRow style={{ gap: 6 }}>
                 <div
                   style={{
@@ -522,7 +753,7 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 공연장명: 대학로 아트홀
               </FlexRow>
             </PortfolioBox>
-            <PortfolioBox>
+            <PortfolioBox onClick={() => router.push("/search/project/2")}>
               <FlexRow style={{ gap: 6 }}>
                 <div
                   style={{
@@ -559,356 +790,131 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
             </PortfolioBox>
           </div>
         </div>
-        {imageOverlayVisible && (
-          <ImageOverlay>
-            <ShadowHeader>
-              <div
-                onClick={() => {
-                  setImageOverlayVisible(false);
+        <Divider />
+        <div style={{ padding: "0 16px", width: "100%" }}>
+          <Title
+            style={{
+              ...TYPOGRAPHY.h4["bold"],
+            }}
+          >
+            지난 프로젝트
+          </Title>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <PortfolioBox onClick={() => router.push("/search/project/0")}>
+              <FlexRow style={{ gap: 6 }}>
+                <div
+                  style={{
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[100],
+                    backgroundColor: COLORS.grayscale[1300],
+                    padding: "2px 6px",
+                  }}
+                >
+                  연극
+                </div>
+                <div
+                  style={{
+                    ...TYPOGRAPHY.body2["semiBold"],
+                  }}
+                >
+                  공연명
+                </div>
+              </FlexRow>
+              <FlexRow
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
                 }}
-                style={{ cursor: "pointer" }}
               >
-                <LeftChevronIcon fill="#FFFFFF" />
-              </div>
-            </ShadowHeader>
-            <div style={{ width: "100%", height: "100%" }}>
-              <Image
-                src="/images/oblong-profiles/women/woman-1.png"
-                alt="Profile"
-                fill
-                sizes="100%"
-                style={{ objectFit: "contain" }}
-                priority
-              />
-            </div>
-          </ImageOverlay>
-        )}
-        {videoOverlayVisible && (
-          <VideoOverlay>
-            <ShadowHeader>
-              <div
-                onClick={() => {
-                  setVideoOverlayVisible(false);
+                2023.09.21 ~ 2023.09.21
+              </FlexRow>
+              <FlexRow
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
                 }}
-                style={{ cursor: "pointer" }}
               >
-                <LeftChevronIcon fill="#FFFFFF" />
-              </div>
-            </ShadowHeader>
-            <div style={{ width: "100%", height: "100%" }}>
-              <video
-                src="/videos/cute_woman_audition.mp4"
-                controls
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                autoPlay
-              />
-            </div>
-          </VideoOverlay>
-        )}
-      </Container>
-    );
-  }
-
-  return (
-    <Container>
-      <ShadowHeader>
-        <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
-          <LeftChevronIcon fill="#FFFFFF" />
+                공연장명: 대학로 아트홀
+              </FlexRow>
+            </PortfolioBox>
+            <PortfolioBox onClick={() => router.push("/search/project/1")}>
+              <FlexRow style={{ gap: 6 }}>
+                <div
+                  style={{
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[100],
+                    backgroundColor: COLORS.grayscale[1300],
+                    padding: "2px 6px",
+                  }}
+                >
+                  연극
+                </div>
+                <div
+                  style={{
+                    ...TYPOGRAPHY.body2["semiBold"],
+                  }}
+                >
+                  공연명
+                </div>
+              </FlexRow>
+              <FlexRow
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                }}
+              >
+                2023.09.21 ~ 2023.09.21
+              </FlexRow>
+              <FlexRow
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                }}
+              >
+                공연장명: 대학로 아트홀
+              </FlexRow>
+            </PortfolioBox>
+            <PortfolioBox onClick={() => router.push("/search/project/2")}>
+              <FlexRow style={{ gap: 6 }}>
+                <div
+                  style={{
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[100],
+                    backgroundColor: COLORS.grayscale[1300],
+                    padding: "2px 6px",
+                  }}
+                >
+                  연극
+                </div>
+                <div
+                  style={{
+                    ...TYPOGRAPHY.body2["semiBold"],
+                  }}
+                >
+                  공연명
+                </div>
+              </FlexRow>
+              <FlexRow
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                }}
+              >
+                2023.09.21 ~ 2023.09.21
+              </FlexRow>
+              <FlexRow
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                }}
+              >
+                공연장명: 대학로 아트홀
+              </FlexRow>
+            </PortfolioBox>
+          </div>
         </div>
-        <div
-          onClick={() => router.push("/stage/edit/profile")}
-          style={{ cursor: "pointer" }}
-        >
-          <EditorIcon />
-        </div>
-      </ShadowHeader>
-      <ImageWrapper
-        style={{
-          backgroundColor: COLORS.grayscale[200],
-        }}
-      >
-        <Image
-          src={"/images/square-profiles/thumbnail/cd-bg.png"}
-          alt={artist.name}
-          fill
-          sizes="100%"
-          style={{ objectFit: "cover" }}
-          priority
-        />
-      </ImageWrapper>
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-start",
-          flexDirection: "column",
-          padding: "25px 16px",
-        }}
-      >
-        <div
-          style={{
-            ...TYPOGRAPHY.body1["medium"],
-            color: COLORS.grayscale[1300],
-          }}
-        >
-          소속사명
-          {artist.level}
-        </div>
-        <div
-          style={{
-            ...TYPOGRAPHY.h2["bold"],
-          }}
-        >
-          {artist.name}
-        </div>
-      </div>
-      <Divider />
-      <div style={{ padding: "0 16px", width: "100%" }}>
-        <Title
-          style={{
-            ...TYPOGRAPHY.h4["bold"],
-          }}
-        >
-          진행중인 프로젝트
-        </Title>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-          }}
-        >
-          <PortfolioBox onClick={() => router.push("/search/project/0")}>
-            <FlexRow style={{ gap: 6 }}>
-              <div
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.grayscale[1300],
-                  padding: "2px 6px",
-                }}
-              >
-                연극
-              </div>
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["semiBold"],
-                }}
-              >
-                공연명
-              </div>
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              2023.09.21 ~ 2023.09.21
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              공연장명: 대학로 아트홀
-            </FlexRow>
-          </PortfolioBox>
-          <PortfolioBox onClick={() => router.push("/search/project/1")}>
-            <FlexRow style={{ gap: 6 }}>
-              <div
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.grayscale[1300],
-                  padding: "2px 6px",
-                }}
-              >
-                연극
-              </div>
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["semiBold"],
-                }}
-              >
-                공연명
-              </div>
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              2023.09.21 ~ 2023.09.21
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              공연장명: 대학로 아트홀
-            </FlexRow>
-          </PortfolioBox>
-          <PortfolioBox onClick={() => router.push("/search/project/2")}>
-            <FlexRow style={{ gap: 6 }}>
-              <div
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.grayscale[1300],
-                  padding: "2px 6px",
-                }}
-              >
-                연극
-              </div>
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["semiBold"],
-                }}
-              >
-                공연명
-              </div>
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              2023.09.21 ~ 2023.09.21
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              공연장명: 대학로 아트홀
-            </FlexRow>
-          </PortfolioBox>
-        </div>
-      </div>
-      <Divider />
-      <div style={{ padding: "0 16px", width: "100%" }}>
-        <Title
-          style={{
-            ...TYPOGRAPHY.h4["bold"],
-          }}
-        >
-          지난 프로젝트
-        </Title>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-          }}
-        >
-          <PortfolioBox onClick={() => router.push("/search/project/0")}>
-            <FlexRow style={{ gap: 6 }}>
-              <div
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.grayscale[1300],
-                  padding: "2px 6px",
-                }}
-              >
-                연극
-              </div>
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["semiBold"],
-                }}
-              >
-                공연명
-              </div>
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              2023.09.21 ~ 2023.09.21
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              공연장명: 대학로 아트홀
-            </FlexRow>
-          </PortfolioBox>
-          <PortfolioBox onClick={() => router.push("/search/project/1")}>
-            <FlexRow style={{ gap: 6 }}>
-              <div
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.grayscale[1300],
-                  padding: "2px 6px",
-                }}
-              >
-                연극
-              </div>
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["semiBold"],
-                }}
-              >
-                공연명
-              </div>
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              2023.09.21 ~ 2023.09.21
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              공연장명: 대학로 아트홀
-            </FlexRow>
-          </PortfolioBox>
-          <PortfolioBox onClick={() => router.push("/search/project/2")}>
-            <FlexRow style={{ gap: 6 }}>
-              <div
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.grayscale[1300],
-                  padding: "2px 6px",
-                }}
-              >
-                연극
-              </div>
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["semiBold"],
-                }}
-              >
-                공연명
-              </div>
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              2023.09.21 ~ 2023.09.21
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              공연장명: 대학로 아트홀
-            </FlexRow>
-          </PortfolioBox>
-        </div>
-      </div>
+      </OuterBox>
+      <GNB />
     </Container>
   );
 };
@@ -1127,4 +1133,18 @@ const MessageBoxButton = styled.div`
   align-items: center;
   padding: 12px 16px;
   cursor: pointer;
+`;
+
+const OuterBox = styled.div`
+  flex: 1;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none;
+  -ms-overflow-style: none; /* IE and Edge */
+  padding-bottom: 120px;
 `;

@@ -38,6 +38,7 @@ export const attachAuthHelpers = (helpers: {
 customAxios.interceptors.request.use((config) => {
   const token = getToken();
   if (token && !config.url?.startsWith("auth")) {
+    console.log("Attaching token to request:", token);
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -50,6 +51,7 @@ customAxios.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log("401 error detected, attempting token refresh");
       originalRequest._retry = true;
 
       if (isRefreshing) {
