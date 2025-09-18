@@ -15,7 +15,7 @@ const GNB = () => {
         style={{ ...TYPOGRAPHY.caption["medium"] }}
         selected={pathName === "/"}
         onClick={() => {
-          window.location.href = "/";
+          router.replace("/");
         }}
       >
         <MagnifierIcon
@@ -29,7 +29,7 @@ const GNB = () => {
         style={{ ...TYPOGRAPHY.caption["medium"] }}
         selected={pathName === "/connection"}
         onClick={() => {
-          window.location.href = "/connection";
+          router.replace("/connection");
         }}
       >
         <ConnectionIcon
@@ -45,7 +45,7 @@ const GNB = () => {
         style={{ ...TYPOGRAPHY.caption["medium"] }}
         selected={pathName.startsWith("/stage")}
         onClick={() => {
-          window.location.href = "/stage";
+          router.replace("/stage");
         }}
       >
         <AIcon

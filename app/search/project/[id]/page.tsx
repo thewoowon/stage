@@ -32,7 +32,7 @@ const ProjectPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const handleConnection = () => {
     router.push(`/connection/project/${id}/send`);
     return;
-    if (user.role === "AR") {
+    if (user.category === 1) {
       window.location.href =
         "https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=email%20profile&access_type=offline&prompt=consent";
     } else {
@@ -181,7 +181,7 @@ const ProjectPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
       </div>
       <Divider />
-      {user.role === "AR" && (
+      {user.category === 1 && (
         <ButtonBox>
           <Button onClick={handleConnection}>연결 보내기</Button>
         </ButtonBox>
@@ -189,7 +189,8 @@ const ProjectPage = ({ params }: { params: Promise<{ id: string }> }) => {
       <Modal style={{ display: open ? "flex" : "none" }}>
         <MessageBox>
           <div>
-            연결이 성공적으로<br />
+            연결이 성공적으로
+            <br />
             전송되었습니다
           </div>
           <MessageBoxButton

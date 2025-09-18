@@ -1,16 +1,8 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 
 type UserContextType = {
-  user: {
-    role: "AR" | "CD";
-    name: string;
-  };
-  setUser: React.Dispatch<
-    React.SetStateAction<{
-      role: "AR" | "CD";
-      name: string;
-    }>
-  >;
+  user: User;
+  setUser: React.Dispatch<React.SetStateAction<User>>;
 };
 
 export const UserContext = createContext<UserContextType | undefined>(
@@ -20,12 +12,15 @@ export const UserContext = createContext<UserContextType | undefined>(
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<{
-    role: "AR" | "CD";
-    name: string;
-  }>({
-    role: "CD",
-    name: "김아티스트",
+  const [user, setUser] = useState<User>({
+    id: 0,
+    category: null,
+    email: "",
+    name: "",
+    profileImage: "",
+    regDate: "",
+    thumbnailImage: "",
+    updDate: "",
   });
 
   return (

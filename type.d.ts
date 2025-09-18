@@ -6,14 +6,16 @@ declare global {
     stroke?: string;
   }
 
+  // 1이 아티스트
   type User = {
     id: number;
-    name: string;
+    category: number | null;
     email: string;
-    regDate: string;
-    updDate: string | null;
-    thumbnailImage: string;
+    name: string;
     profileImage: string;
+    regDate: string;
+    thumbnailImage: string;
+    updDate: string;
   };
 
   type ReportType = {
@@ -87,6 +89,12 @@ declare global {
     weight?: number;
     birthDate?: string;
     specialty?: string[];
+    // 소속유형
+    affiliationType?: string;
+    youtubeUrl?: string;
+    instagramUrl?: string;
+    facebookUrl?: string;
+    twitterUrl?: string;
   };
 
   type ProjectType = {

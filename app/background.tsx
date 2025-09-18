@@ -1,3 +1,5 @@
+import { COLORS } from "@/styles/color";
+
 const Background = () => {
   return (
     <div
@@ -8,7 +10,7 @@ const Background = () => {
         width: "100%",
         height: "100%",
         zIndex: -1,
-        backgroundColor: "white",
+        backgroundColor: COLORS.primary[500],
       }}
     />
   );

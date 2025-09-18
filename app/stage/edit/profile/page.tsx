@@ -10,9 +10,16 @@ import { COLORS } from "@/styles/color";
 import InstagramIcon from "@/components/svg/InstagramIcon";
 import YoutubeIcon from "@/components/svg/YoutubeIcon";
 import { useUser } from "@/contexts/UserContext";
+import EditorIcon from "@/components/svg/EditorIcon";
 
-const AI_RECOMMENDED_ARTISTS: ArtistType[] = [
-  {
+const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
+  const searchParams = useSearchParams();
+  const status = searchParams.get("status");
+  const { id } = use(params);
+  const router = useRouter();
+  const { user } = useUser();
+  const [open, setOpen] = useState(false);
+  const [artist, setArtist] = useState<ArtistType>({
     id: 0,
     name: "김아티스트",
     profileImage: "/images/square-profiles/men/man-1.png",
@@ -27,168 +34,346 @@ const AI_RECOMMENDED_ARTISTS: ArtistType[] = [
     weight: 75,
     birthDate: "1990-01-01",
     specialty: ["보컬", "작곡"],
-  },
-  {
-    id: 1,
-    name: "이뮤지션",
-    profileImage: "/images/square-profiles/women/woman-1.png",
-    thumbnailImage: "/images/square-profiles/woman-1.png",
-    description: "안녕하세요. 저는 음악을 좋아하는 이뮤지션입니다.",
-    followersCount: 980,
-    isFollowing: true,
-    level: 4,
-    score: 1200,
-    tags: ["록", "인디"],
-    height: 165,
-    weight: 50,
-    birthDate: "1995-03-22",
-    specialty: ["배우", "보컬"],
-  },
-  {
-    id: 2,
-    name: "박댄서",
-    profileImage: "/images/square-profiles/women/woman-2.png",
-    thumbnailImage: "/images/square-profiles/woman-2.png",
-    description: "안녕하세요. 저는 춤을 좋아하는 박댄서입니다.",
-    followersCount: 1500,
-    isFollowing: false,
-    level: 6,
-    score: 1800,
-    tags: ["힙합", "팝"],
-    height: 175,
-    weight: 65,
-    birthDate: "1992-05-15",
-    specialty: ["댄서"],
-  },
-  {
-    id: 3,
-    name: "최성악가",
-    profileImage: "/images/square-profiles/women/woman-3.png",
-    thumbnailImage: "/images/square-profiles/woman-3.png",
-    description: "안녕하세요. 저는 성악을 전공한 최성악가입니다.",
-    followersCount: 800,
-    isFollowing: false,
-    level: 3,
-    score: 900,
-    tags: ["클래식", "오페라"],
-    height: 170,
-    weight: 55,
-    birthDate: "1988-11-30",
-    specialty: ["성악"],
-  },
-];
+    affiliationType: "무소속",
+  });
 
-const ArtistCard = ({ artist }: { artist: ArtistType }) => {
-  const router = useRouter();
-  return (
-    <ArtistCardContainer
-      onClick={() => router.push(`/search/artist/${artist.id}`)}
-    >
-      <div style={{ position: "relative", width: "140px", height: "140px" }}>
-        <Image
-          src={artist.profileImage}
-          alt={artist.name}
-          fill
-          sizes="100%"
-          style={{ objectFit: "cover" }}
-          priority
-        />
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
-          padding: "0 10px 10px 10px",
-        }}
-      >
-        <div>
-          {artist.tags.slice(0, 1).map((tag, index) => (
-            <span
-              key={index}
+  if (user.category === 1) {
+    return (
+      <Container>
+        <ShadowHeader>
+          <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
+            <LeftChevronIcon fill="#FFFFFF" />
+          </div>
+        </ShadowHeader>
+        <ImageWrapper
+          style={{
+            backgroundColor: COLORS.grayscale[200],
+          }}
+        >
+          <Image
+            src={artist.profileImage}
+            alt={artist.name}
+            fill
+            sizes="100%"
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        </ImageWrapper>
+        <div
+          style={{
+            width: "100%",
+            padding: "30px 16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+        >
+          <div style={{ width: "100%" }}>
+            <div
               style={{
                 ...TYPOGRAPHY.caption["medium"],
-                color: COLORS.grayscale[100],
-                backgroundColor: COLORS.primary[500],
-                padding: "2px 6px",
-                marginRight: 4,
+                color: COLORS.grayscale[700],
+                marginBottom: "10px",
               }}
             >
-              {tag}
-            </span>
-          ))}
+              프로젝트
+            </div>
+            <FlexRow
+              style={{
+                height: "44px",
+                border: `0.7px solid ${COLORS.grayscale[500]}`,
+                position: "relative",
+                cursor: "pointer",
+              }}
+            >
+              <CustomInput
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  paddingLeft: "10px",
+                }}
+                placeholder="프로젝트명을 입력해주세요."
+                value={artist.name}
+                onChange={(e) => {
+                  setArtist({ ...artist, name: e.target.value });
+                }}
+              />
+            </FlexRow>
+          </div>
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                ...TYPOGRAPHY.caption["medium"],
+                color: COLORS.grayscale[700],
+                marginBottom: "10px",
+              }}
+            >
+              Instagram 링크
+            </div>
+            <FlexRow
+              style={{
+                height: "44px",
+                border: `0.7px solid ${COLORS.grayscale[500]}`,
+                position: "relative",
+                cursor: "pointer",
+              }}
+            >
+              <CustomInput
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  paddingLeft: "10px",
+                }}
+                placeholder="인스타그랩을 입력해주세요."
+                value={artist.instagramUrl || ""}
+                onChange={(e) => {
+                  setArtist({ ...artist, instagramUrl: e.target.value });
+                }}
+              />
+            </FlexRow>
+          </div>
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                ...TYPOGRAPHY.caption["medium"],
+                color: COLORS.grayscale[700],
+                marginBottom: "10px",
+              }}
+            >
+              Youtube 링크
+            </div>
+            <FlexRow
+              style={{
+                height: "44px",
+                border: `0.7px solid ${COLORS.grayscale[500]}`,
+                position: "relative",
+                cursor: "pointer",
+              }}
+            >
+              <CustomInput
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  paddingLeft: "10px",
+                }}
+                placeholder="유튜브 채널주소를 입력해주세요."
+                value={artist.youtubeUrl || ""}
+                onChange={(e) => {
+                  setArtist({ ...artist, youtubeUrl: e.target.value });
+                }}
+              />
+            </FlexRow>
+          </div>
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                ...TYPOGRAPHY.caption["medium"],
+                color: COLORS.grayscale[700],
+                marginBottom: "10px",
+              }}
+            >
+              생년월일
+            </div>
+            <FlexRow
+              style={{
+                height: "44px",
+                border: `0.7px solid ${COLORS.grayscale[500]}`,
+                position: "relative",
+                cursor: "pointer",
+              }}
+            >
+              <CustomInput
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  paddingLeft: "10px",
+                }}
+                placeholder="프로젝트명을 입력해주세요."
+                value={artist.birthDate}
+                onChange={(e) => {
+                  setArtist({ ...artist, birthDate: e.target.value });
+                }}
+              />
+            </FlexRow>
+          </div>
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                ...TYPOGRAPHY.caption["medium"],
+                color: COLORS.grayscale[700],
+                marginBottom: "10px",
+              }}
+            >
+              신장
+            </div>
+            <FlexRow
+              style={{
+                height: "44px",
+                border: `0.7px solid ${COLORS.grayscale[500]}`,
+                position: "relative",
+                cursor: "pointer",
+              }}
+            >
+              <CustomInput
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  paddingLeft: "10px",
+                }}
+                placeholder="프로젝트명을 입력해주세요."
+                value={artist.height}
+                onChange={(e) => {
+                  setArtist({ ...artist, height: Number(e.target.value) });
+                }}
+              />
+            </FlexRow>
+          </div>
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                ...TYPOGRAPHY.caption["medium"],
+                color: COLORS.grayscale[700],
+                marginBottom: "10px",
+              }}
+            >
+              체중
+            </div>
+            <FlexRow
+              style={{
+                height: "44px",
+                border: `0.7px solid ${COLORS.grayscale[500]}`,
+                position: "relative",
+                cursor: "pointer",
+              }}
+            >
+              <CustomInput
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  paddingLeft: "10px",
+                }}
+                placeholder="체중을 입력해주세요."
+                value={artist.weight || ""}
+                onChange={(e) => {
+                  setArtist({ ...artist, weight: Number(e.target.value) });
+                }}
+              />
+            </FlexRow>
+          </div>
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                ...TYPOGRAPHY.caption["medium"],
+                color: COLORS.grayscale[700],
+                marginBottom: "10px",
+              }}
+            >
+              소속여부
+            </div>
+            <FlexRow
+              style={{
+                height: "44px",
+                border: `0.7px solid ${COLORS.grayscale[500]}`,
+                position: "relative",
+                cursor: "pointer",
+              }}
+            >
+              <CustomInput
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  paddingLeft: "10px",
+                }}
+                placeholder="소속여부를 입력해주세요."
+                value={artist.affiliationType}
+                onChange={(e) => {
+                  setArtist({ ...artist, affiliationType: e.target.value });
+                }}
+              />
+            </FlexRow>
+          </div>
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                ...TYPOGRAPHY.caption["medium"],
+                color: COLORS.grayscale[700],
+                marginBottom: "10px",
+              }}
+            >
+              특기
+            </div>
+            <FlexRow
+              style={{
+                height: "44px",
+                border: `0.7px solid ${COLORS.grayscale[500]}`,
+                position: "relative",
+                cursor: "pointer",
+              }}
+            >
+              <CustomInput
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  paddingLeft: "10px",
+                }}
+                placeholder="특기를 입력해주세요."
+                value={artist.specialty?.join(", ") || ""}
+                onChange={(e) => {
+                  setArtist({
+                    ...artist,
+                    specialty: e.target.value.split(", "),
+                  });
+                }}
+              />
+            </FlexRow>
+          </div>
+          <div style={{ width: "100%" }}>
+            <div
+              style={{
+                ...TYPOGRAPHY.caption["medium"],
+                color: COLORS.grayscale[700],
+                marginBottom: "10px",
+              }}
+            >
+              분야
+            </div>
+            <FlexRow
+              style={{
+                height: "44px",
+                border: `0.7px solid ${COLORS.grayscale[500]}`,
+                position: "relative",
+                cursor: "pointer",
+              }}
+            >
+              <CustomInput
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  paddingLeft: "10px",
+                }}
+                placeholder="분야를 입력해주세요."
+                value={artist.tags.join(", ")}
+                onChange={(e) => {
+                  setArtist({ ...artist, name: e.target.value });
+                }}
+              />
+            </FlexRow>
+          </div>
         </div>
-        <div
-          style={{
-            ...TYPOGRAPHY.body1["semiBold"],
-          }}
-        >
-          {artist.name}
-        </div>
-        {/* <div style={{ ...TYPOGRAPHY.body2["regular"] }}>
-          팔로워 {artist.followersCount}명
-        </div> */}
-        <div
-          style={{
-            ...TYPOGRAPHY.body2["regular"],
-            color: COLORS.grayscale[700],
-          }}
-        >
-          레벨
-          {artist.level}/ {artist.score}
-        </div>
-      </div>
-    </ArtistCardContainer>
-  );
-};
-
-const ArtistCardContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 13px;
-  cursor: pointer;
-  border: 0.7px solid ${COLORS.grayscale[500]};
-`;
-
-const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const searchParams = useSearchParams();
-  const status = searchParams.get("status");
-  const { id } = use(params);
-  const router = useRouter();
-  const { user } = useUser();
-  const [open, setOpen] = useState(false);
-
-  const [imageOverlayVisible, setImageOverlayVisible] = useState(false);
-  const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
-
-  const artist = ARTIST_DATA.find((artist) => artist.id === 0);
-
-  useEffect(() => {
-    if (status === "connected") {
-      setOpen(true);
-    }
-  }, [status]);
-
-  if (!artist) {
-    return <div>Artist not found</div>;
+      </Container>
+    );
   }
 
   return (
     <Container>
-      <ShadowHeader>
-        <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
-          <LeftChevronIcon fill="#FFFFFF" />
+      <HeaderWithTitle>
+        <div
+          onClick={() => router.back()}
+          style={{ cursor: "pointer", left: 16 }}
+        >
+          <LeftChevronIcon fill="#111111" />
         </div>
-      </ShadowHeader>
+        <div>프로젝트명</div>
+        <EditorIcon fill="#111111" />
+      </HeaderWithTitle>
       <ImageWrapper
         style={{
           backgroundColor: COLORS.grayscale[200],
         }}
       >
         <Image
-          src={artist.profileImage}
+          src={"/images/square-profiles/thumbnail/cd-bg.png"}
           alt={artist.name}
           fill
           sizes="100%"
@@ -196,6 +381,88 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
           priority
         />
       </ImageWrapper>
+      <div
+        style={{
+          width: "100%",
+          padding: "30px 16px 16px 16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        <div style={{ width: "100%" }}>
+          <div
+            style={{
+              ...TYPOGRAPHY.caption["medium"],
+              color: COLORS.grayscale[700],
+              marginBottom: "10px",
+            }}
+          >
+            프로젝트
+          </div>
+          <FlexRow
+            style={{
+              height: "44px",
+              border: `0.7px solid ${COLORS.grayscale[500]}`,
+              position: "relative",
+              cursor: "pointer",
+            }}
+          >
+            <CustomInput
+              style={{
+                ...TYPOGRAPHY.body2["regular"],
+                paddingLeft: "10px",
+              }}
+              placeholder="프로젝트명을 입력해주세요."
+              value={artist.name}
+              onChange={(e) => {
+                setArtist({ ...artist, name: e.target.value });
+              }}
+            />
+          </FlexRow>
+        </div>
+      </div>
+      <div
+        style={{
+          width: "100%",
+          padding: "0px 16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        <div style={{ width: "100%" }}>
+          <div
+            style={{
+              ...TYPOGRAPHY.caption["medium"],
+              color: COLORS.grayscale[700],
+              marginBottom: "10px",
+            }}
+          >
+            소속
+          </div>
+          <FlexRow
+            style={{
+              height: "44px",
+              border: `0.7px solid ${COLORS.grayscale[500]}`,
+              position: "relative",
+              cursor: "pointer",
+            }}
+          >
+            <CustomInput
+              style={{
+                ...TYPOGRAPHY.body2["regular"],
+                paddingLeft: "10px",
+              }}
+              placeholder="프로젝트명을 입력해주세요."
+              value={artist.name}
+              onChange={(e) => {
+                setArtist({ ...artist, name: e.target.value });
+              }}
+            />
+          </FlexRow>
+        </div>
+      </div>
     </Container>
   );
 };
@@ -247,166 +514,31 @@ const ImageWrapper = styled.div`
   flex-shrink: 0;
 `;
 
-const Flex = styled.div`
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin-bottom: 8px;
-`;
-
-const Divider = styled.div`
+const CustomInput = styled.input`
+  all: unset;
   width: 100%;
-  height: 8px;
-  background-color: #f4f4f4;
-  margin: 16px 0;
-  flex-shrink: 0;
-`;
-
-const ButtonBox = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding-left: 16px;
-  padding-right: 16px;
-  margin-bottom: 20px;
-  margin-top: 12px;
-`;
-
-const Button = styled.button`
-  z-index: 1;
-  width: 100%;
-  height: 48px;
-  background-color: ${COLORS.primary[500]};
-  color: ${COLORS.grayscale[100]};
-  border: none;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 20px;
-  letter-spacing: -2%;
-  transition: background-color 0.2s ease-in-out;
-  cursor: pointer;
-
-  &:hover {
-    background-color: ${COLORS.primary[600]};
-  }
-
-  &:disabled {
-    background-color: ${COLORS.grayscale[200]};
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  &::placeholder {
     color: ${COLORS.grayscale[500]};
-    cursor: not-allowed;
   }
-`;
-
-const HorizontalThemeScrollContainer = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  scrollbar-width: none;
-  -ms-overflow-style: none; /* IE and Edge */
-  gap: 8px;
-  padding: 12px 0px;
-`;
-
-const PortfolioBox = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  border: 1px solid ${COLORS.grayscale[500]};
-  padding: 12px 14px;
 `;
 
 const FlexRow = styled.div`
+  position: relative;
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
 `;
 
-const Title = styled.div`
-  margin-bottom: 10px;
-`;
-
-const SnsCard = styled.div`
-  width: 190px;
-  height: object-fit;
-  border: 0.7px solid ${COLORS.grayscale[500]};
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  cursor: pointer;
-`;
-
-const ImageOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
+const HeaderWithTitle = styled.div`
   width: 100%;
-  height: 100%;
-  background-color: black;
-  transition: opacity 0.3s ease-in-out;
+  height: 57px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  z-index: 20;
-`;
-
-const VideoOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: black;
-  transition: opacity 0.3s ease-in-out;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 20;
-`;
-
-const Modal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 26px;
-`;
-
-const MessageBox = styled.div`
-  width: 324px;
-  background-color: white;
-  color: ${COLORS.grayscale[1300]};
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  gap: 16px;
-`;
-
-const MessageBoxButton = styled.div`
-  flex: 1;
-  width: 100%;
-  height: 46px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 12px 16px;
-  cursor: pointer;
+  padding: 0 16px;
+  flex-shrink: 0;
 `;

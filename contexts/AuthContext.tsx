@@ -12,6 +12,7 @@ type AuthContextType = {
   accessToken: string | null;
   setAccessToken: (token: string | null) => void;
   isAuthenticated: boolean;
+  setIsAuthenticated: (value: boolean) => void; // Optional setter
   isLoading: boolean;
   initializeAuth: () => Promise<void>;
   logout: () => void;
@@ -26,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // ✅ logout
   const logout = useCallback(() => {
@@ -51,6 +53,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const token = localStorage.getItem("accessToken");
       if (token) {
         handleSetAccessToken(token);
+        setIsAuthenticated(true); // ✅ 토큰 있으면 인증 상태 true로 세팅
+      } else {
+        setIsAuthenticated(false); // ✅ 없으면 false
       }
     } catch (e) {
       console.error("Auth init error:", e);
@@ -79,7 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         accessToken,
         setAccessToken: handleSetAccessToken,
-        isAuthenticated: !!accessToken,
+        isAuthenticated,
+        setIsAuthenticated,
         isLoading,
         initializeAuth,
         logout,

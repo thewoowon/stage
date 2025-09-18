@@ -8,22 +8,34 @@ import { useAuth } from "@/contexts/AuthContext"; // ✅ Context 기반
 import BackgroundVideo from "@/components/module/BackgroundVideo";
 import { LogoText } from "@/components/svg";
 import SearchMainView from "@/components/view/SearchMainView";
+import { useUser } from "@/contexts/UserContext";
 
 export default function Home() {
   const router = useRouter();
   const params = useSearchParams();
   const code = params.get("code");
+  const { user, setUser } = useUser();
 
   // ✅ AuthContext 훅 사용
-  const { accessToken, setAccessToken, isAuthenticated } = useAuth();
+  const { accessToken, setAccessToken, isAuthenticated, setIsAuthenticated } =
+    useAuth();
 
   // ✅ 서버에서 Access Token 발급
   const getAccessToken = useCallback(async () => {
+    console.log("getAccessToken 호출됨");
     if (!code) return;
     try {
-      const response = await customAxios.get("/token/token", {
+      const response = await customAxios.get("/api/token/token", {
         params: { code },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${1}`,
+        },
       });
+
+      console.log("code: ", code);
+
+      console.log("response:", response);
 
       if (response.status === 200) {
         console.log("로그인 성공");
@@ -31,28 +43,58 @@ export default function Home() {
         setAccessToken(token);
         localStorage.setItem("refreshToken", response.headers["refreshtoken"]);
       } else {
+        console.error("로그인 실패:", response);
         alert("로그인에 실패했습니다. 다시 시도해주세요.");
       }
-      router.replace("/");
+
+      const userInfoResponse = await customAxios.get("/api/user/getUserInfo", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${response.headers["accesstoken"]}`,
+        },
+      });
+
+      console.log("userInfoResponse:", userInfoResponse);
+      if (userInfoResponse.status === 200) {
+        const userInfo = userInfoResponse.data;
+        console.log("userInfo:", userInfo);
+        if (!userInfo.category) {
+          router.replace("/signup");
+          return;
+        }
+        router.replace("/");
+        setIsAuthenticated(true);
+        setUser(userInfo);
+      }
+
+      // 여기서 사용자 정보를 한 번 더 조회      router.replace("/");
     } catch (error) {
+      console.error("로그인 왜 오류났는지..:", error);
       console.error("로그인 중 오류 발생:", error);
       alert("로그인에 실패했습니다. 다시 시도해주세요.");
       router.replace("/");
     }
-  }, [code, router, setAccessToken]);
+  }, [code, router, setAccessToken, setIsAuthenticated, setUser]);
 
   // ✅ 테스트용 버튼
   const handleLogin = () => {
-    setAccessToken("1");
-    localStorage.setItem("refreshToken", "dummy-refresh");
+    // setAccessToken("1");
+    // localStorage.setItem("refreshToken", "1");
+    window.location.href =
+      "https://api.thisismystage.com/oauth2/authorization/google";
   };
 
   // ✅ 최초 진입 시 code 있으면 토큰 요청
   useEffect(() => {
     if (code) {
+      console.log("code:", code);
       getAccessToken();
     }
   }, [code, getAccessToken]);
+
+  console.log("isAuthenticated:", isAuthenticated);
+  console.log("accessToken:", accessToken);
+  console.log("user:", user);
 
   // ✅ 인증 상태에 따라 분기 렌더링
   if (isAuthenticated) {

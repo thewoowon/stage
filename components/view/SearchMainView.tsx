@@ -7,6 +7,8 @@ import { TYPOGRAPHY } from "@/styles/typography";
 import DownChevronIcon from "../svg/DownChevronIcon";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import customAxios from "@/lib/axios";
 
 export const ARTIST_DATA: ArtistType[] = [
   {
@@ -437,6 +439,46 @@ const SearchMainView = () => {
   const handleModeChange = (mode: "artist" | "project") => {
     setViewMode(mode);
   };
+
+  const { data: artistData } = useQuery({
+    queryKey: ["artistList", selectedTheme, sortOption],
+    queryFn: async () => {
+      // Replace with your API call
+      const response = await customAxios("/api/stage/getStageList", {
+        params: {
+          genreListList: [],
+          startNumber: 0,
+          offsetNumber: 20,
+          sort: 0,
+        },
+      });
+
+      if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+      }
+      return response.data;
+    },
+  });
+
+  const { data: projectData } = useQuery({
+    queryKey: ["projectList", selectedTheme, sortOption],
+    queryFn: async () => {
+      // Replace with your API call
+      const response = await customAxios("/api/project/getProjectList", {
+        params: {
+          genreListList: [],
+          startNumber: 0,
+          offsetNumber: 20,
+          sort: 0,
+        },
+      });
+
+      if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+      }
+      return response.data;
+    },
+  });
 
   return (
     <Container>

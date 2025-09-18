@@ -178,7 +178,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const handleConnection = () => {
     router.push(`/connection/artist/${id}/send`);
     return;
-    if (user.role === "AR") {
+    if (user.category === 1) {
       window.location.href =
         "https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=email%20profile&access_type=offline&prompt=consent";
     } else {
@@ -537,7 +537,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           ))}
         </HorizontalThemeScrollContainer>
       </div>
-      {user.role === "AR" && (
+      {user.category === 1 && (
         <ButtonBox>
           <Button onClick={handleConnection}>연결 보내기</Button>
         </ButtonBox>
@@ -759,7 +759,7 @@ const SnsCard = styled.div`
 `;
 
 const ImageOverlay = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -773,7 +773,7 @@ const ImageOverlay = styled.div`
 `;
 
 const VideoOverlay = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;

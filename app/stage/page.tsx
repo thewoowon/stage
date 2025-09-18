@@ -11,6 +11,8 @@ import InstagramIcon from "@/components/svg/InstagramIcon";
 import YoutubeIcon from "@/components/svg/YoutubeIcon";
 import { useUser } from "@/contexts/UserContext";
 import EditorIcon from "@/components/svg/EditorIcon";
+import { useQuery } from "@tanstack/react-query";
+import customAxios from "@/lib/axios";
 
 const AI_RECOMMENDED_ARTISTS: ArtistType[] = [
   {
@@ -166,6 +168,26 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const artist = ARTIST_DATA.find((artist) => artist.id === 0);
 
+  const { data: myStageData, isLoading } = useQuery({
+    queryKey: ["myStage"],
+    queryFn: async () => {
+      const response = await customAxios.get(`/api/stage/getMyArtistStage`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer 1`,
+        },
+      });
+      if (response.status !== 200) {
+        throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
+      }
+
+      console.log("myStageData", response.data);
+
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5분
+  });
+
   useEffect(() => {
     if (status === "connected") {
       setOpen(true);
@@ -176,7 +198,11 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
     return <div>Artist not found</div>;
   }
 
-  if (user.role === "AR") {
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (user.category === 1) {
     return (
       <Container>
         <ShadowHeader>
@@ -328,7 +354,7 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               onClick={() => router.push("/stage/edit/sns")}
               style={{ cursor: "pointer" }}
             >
-              <EditorIcon />
+              <EditorIcon fill="black" />
             </div>
           </Title>
           <HorizontalThemeScrollContainer>
@@ -533,6 +559,52 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
             </PortfolioBox>
           </div>
         </div>
+        {imageOverlayVisible && (
+          <ImageOverlay>
+            <ShadowHeader>
+              <div
+                onClick={() => {
+                  setImageOverlayVisible(false);
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <LeftChevronIcon fill="#FFFFFF" />
+              </div>
+            </ShadowHeader>
+            <div style={{ width: "100%", height: "100%" }}>
+              <Image
+                src="/images/oblong-profiles/women/woman-1.png"
+                alt="Profile"
+                fill
+                sizes="100%"
+                style={{ objectFit: "contain" }}
+                priority
+              />
+            </div>
+          </ImageOverlay>
+        )}
+        {videoOverlayVisible && (
+          <VideoOverlay>
+            <ShadowHeader>
+              <div
+                onClick={() => {
+                  setVideoOverlayVisible(false);
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <LeftChevronIcon fill="#FFFFFF" />
+              </div>
+            </ShadowHeader>
+            <div style={{ width: "100%", height: "100%" }}>
+              <video
+                src="/videos/cute_woman_audition.mp4"
+                controls
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                autoPlay
+              />
+            </div>
+          </VideoOverlay>
+        )}
       </Container>
     );
   }
@@ -556,7 +628,7 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
         }}
       >
         <Image
-          src={artist.profileImage}
+          src={"/images/square-profiles/thumbnail/cd-bg.png"}
           alt={artist.name}
           fill
           sizes="100%"
@@ -992,7 +1064,7 @@ const SnsCard = styled.div`
 `;
 
 const ImageOverlay = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -1006,7 +1078,7 @@ const ImageOverlay = styled.div`
 `;
 
 const VideoOverlay = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;

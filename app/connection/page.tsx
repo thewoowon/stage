@@ -1,142 +1,63 @@
 "use client";
 import GNB from "@/components/layout/GNB";
-import Header from "@/components/layout/Header";
-import { ARTIST_DATA } from "@/components/view/SearchMainView";
 import { useUser } from "@/contexts/UserContext";
+import customAxios from "@/lib/axios";
 import { COLORS } from "@/styles/color";
 import { TYPOGRAPHY } from "@/styles/typography";
 import styled from "@emotion/styled";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-const SENT_PROJECTS_LIST = [
-  {
-    id: 0,
-    title: "2026년 연극 <저니스 엔드> 배우 모집 공고",
-    thumbnailImage: "/images/projects-images/project-1.png",
-    description: "이 프로젝트는 새로운 뮤지컬 작품을 제작하는 프로젝트입니다.",
-    likesCount: 150,
-    isLiked: false,
-    artist: [ARTIST_DATA[2], ARTIST_DATA[4]],
-    tags: ["뮤지컬", "연극"],
-    deadline: "2025-10-09",
-    company: "주식회사 피에치이엔엠 (PH E&M)",
-    caster: "홍길동",
-  },
+const SENT_PROJECT_DATA = [
   {
     id: 1,
-    title:
-      "뮤지컬 [ 우연히 행복해지다 ] - 부산공연 < 배철수역, 유기범역 > 추가 오디션",
-    thumbnailImage: "/images/projects-images/project-2.png",
-    description: "이 프로젝트는 유명 클래식 곡들을 연주하는 콘서트입니다.",
-    likesCount: 200,
-    isLiked: true,
-    artist: [ARTIST_DATA[0], ARTIST_DATA[3]],
-    tags: ["클래식", "콘서트"],
-    deadline: "2025-11-15",
-    company: "클래식 컴퍼니",
-    caster: "김영희",
-  },
-];
-const RECEIVED_PROJECTS_LIST = [
-  {
-    id: 0,
-    title: "2026년 연극 <저니스 엔드> 배우 모집 공고",
-    thumbnailImage: "/images/projects-images/project-1.png",
-    description: "이 프로젝트는 새로운 뮤지컬 작품을 제작하는 프로젝트입니다.",
-    likesCount: 150,
-    isLiked: false,
-    artist: [ARTIST_DATA[2], ARTIST_DATA[4]],
-    tags: ["뮤지컬", "연극"],
-    deadline: "2025-10-09",
-    company: "주식회사 피에치이엔엠 (PH E&M)",
-    caster: "홍길동",
+    title: "나의 아저씨",
+    genre: "드라마",
+    status: "촬영중",
+    statusCode: 1,
+    image:
+      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
+    company: "tvN",
   },
   {
-    id: 1,
-    title:
-      "뮤지컬 [ 우연히 행복해지다 ] - 부산공연 < 배철수역, 유기범역 > 추가 오디션",
-    thumbnailImage: "/images/projects-images/project-2.png",
-    description: "이 프로젝트는 유명 클래식 곡들을 연주하는 콘서트입니다.",
-    likesCount: 200,
-    isLiked: true,
-    artist: [ARTIST_DATA[0], ARTIST_DATA[3]],
-    tags: ["클래식", "콘서트"],
-    deadline: "2025-11-15",
-    company: "클래식 컴퍼니",
-    caster: "김영희",
+    id: 2,
+    title: "이태원 클라쓰",
+    genre: "드라마",
+    status: "촬영중",
+    statusCode: 1,
+    image:
+      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
+    company: "JTBC",
   },
 ];
 
-const SENT_ARTISTS_LIST = [
-  {
-    id: 0,
-    name: "김아티스트",
-    profileImage: "/images/square-profiles/men/man-1.png",
-    thumbnailImage: "/images/square-profiles/men/man-1.png",
-    description: "안녕하세요. 저는 음악을 좋아하는 김아티스트입니다.",
-    followersCount: 1200,
-    isFollowing: false,
-    level: 5,
-    score: 1500,
-    tags: ["팝", "재즈", "클래식"],
-    height: 180,
-    weight: 75,
-    birthDate: "1990-01-01",
-    specialty: ["보컬", "작곡"],
-  },
+const SENT_ARTIST_DATA = [
   {
     id: 1,
-    name: "이아티스트",
-    profileImage: "/images/square-profiles/men/man-2.png",
-    thumbnailImage: "/images/square-profiles/men/man-2.png",
-    description: "안녕하세요. 저는 무용을 좋아하는 이아티스트입니다.",
-    followersCount: 800,
-    isFollowing: true,
-    level: 3,
-    score: 900,
-    tags: ["현대무용", "발레"],
-    height: 175,
-    weight: 65,
-    birthDate: "1992-05-15",
-    specialty: ["댄서"],
-  },
-];
-const RECEIVED_ARTISTS_LIST = [
-  {
-    id: 0,
-    name: "김아티스트",
-    profileImage: "/images/square-profiles/men/man-1.png",
-    thumbnailImage: "/images/square-profiles/men/man-1.png",
-    description: "안녕하세요. 저는 음악을 좋아하는 김아티스트입니다.",
-    followersCount: 1200,
-    isFollowing: false,
-    level: 5,
-    score: 1500,
-    tags: ["팝", "재즈", "클래식"],
-    height: 180,
-    weight: 75,
-    birthDate: "1990-01-01",
-    specialty: ["보컬", "작곡"],
+    name: "아이유",
+    title: "배우",
+    status: "섭외중",
+    statusCode: 1,
+    image:
+      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
   },
   {
-    id: 1,
-    name: "이아티스트",
-    profileImage: "/images/square-profiles/men/man-2.png",
-    thumbnailImage: "/images/square-profiles/men/man-2.png",
-    description: "안녕하세요. 저는 무용을 좋아하는 이아티스트입니다.",
-    followersCount: 800,
-    isFollowing: true,
-    level: 3,
-    score: 900,
-    tags: ["현대무용", "발레"],
-    height: 175,
-    weight: 65,
-    birthDate: "1992-05-15",
-    specialty: ["댄서"],
+    id: 2,
+    name: "박서준",
+    title: "배우",
+    status: "섭외중",
+    statusCode: 1,
+    image:
+      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
   },
 ];
 
-const SentList = ({ data }: { data: (ProjectType | ArtistType)[] }) => {
+const SentList = ({
+  category,
+  data,
+}: {
+  category: number | null;
+  data: (SimpleArtistType | SimpleProjectType)[];
+}) => {
   if (data.length === 0) {
     return (
       <div
@@ -155,16 +76,136 @@ const SentList = ({ data }: { data: (ProjectType | ArtistType)[] }) => {
     );
   }
 
+  const newProjectData = data as SimpleProjectType[];
+  const newArtistData = data as SimpleArtistType[];
+
+  if (category === 1) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          padding: "16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        {newProjectData.map((item) => (
+          <div
+            key={item.id}
+            style={{ width: "100%", display: "flex", gap: "10px" }}
+          >
+            <div
+              style={{
+                width: "86px",
+                height: "86px",
+                backgroundColor: COLORS.grayscale[1300],
+              }}
+            ></div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+                justifyContent: "space-between",
+              }}
+            >
+              <div
+                style={{
+                  ...TYPOGRAPHY.body1["semiBold"],
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <span
+                  style={{
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[100],
+                    backgroundColor: COLORS.primary[500],
+                    padding: "2px 6px",
+                  }}
+                >
+                  {item.genre}
+                </span>
+                {item.title}
+              </div>
+              <div
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  color: COLORS.grayscale[1300],
+                }}
+              >
+                <div>
+                  <span
+                    style={{
+                      ...TYPOGRAPHY.caption["medium"],
+                      color: COLORS.grayscale[700],
+                    }}
+                  >
+                    배역
+                  </span>{" "}
+                  {item.status}
+                </div>
+                <div>
+                  <span
+                    style={{
+                      ...TYPOGRAPHY.caption["medium"],
+                      color: COLORS.grayscale[700],
+                    }}
+                  >
+                    상태
+                  </span>{" "}
+                  {item.status}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div>
-      {data.map((item) => (
-        <div key={item.id}>ArtistCardContainer</div>
+    <div
+      style={{
+        width: "100%",
+        padding: "16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+      }}
+    >
+      {newArtistData.map((item) => (
+        <div
+          key={item.id}
+          style={{ width: "100%", display: "flex", gap: "10px" }}
+        >
+          <div
+            style={{
+              width: "86px",
+              height: "86px",
+              backgroundColor: COLORS.grayscale[1300],
+            }}
+          ></div>
+          <div>
+            <div>{item.title}</div>
+            <div>프로젝트 {item.title}</div>
+            <div>상태 {item.status}</div>
+          </div>
+        </div>
       ))}
     </div>
   );
 };
 
-const ReceivedList = ({ data }: { data: (ProjectType | ArtistType)[] }) => {
+const ReceivedList = ({
+  category,
+  data,
+}: {
+  category: number | null;
+  data: (SimpleProjectType | SimpleArtistType)[];
+}) => {
   if (data.length === 0) {
     return (
       <div
@@ -183,23 +224,190 @@ const ReceivedList = ({ data }: { data: (ProjectType | ArtistType)[] }) => {
     );
   }
 
+  const newProjectData = data as SimpleProjectType[];
+  const newArtistData = data as SimpleArtistType[];
+
+  if (category === 1) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          padding: "16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
+        {newProjectData.map((item) => (
+          <div
+            key={item.id}
+            style={{ width: "100%", display: "flex", gap: "10px" }}
+          >
+            <div
+              style={{
+                width: "86px",
+                height: "86px",
+                backgroundColor: COLORS.grayscale[1300],
+              }}
+            ></div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+                justifyContent: "space-between",
+              }}
+            >
+              <div
+                style={{
+                  ...TYPOGRAPHY.body1["semiBold"],
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <span
+                  style={{
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[100],
+                    backgroundColor: COLORS.primary[500],
+                    padding: "2px 6px",
+                  }}
+                >
+                  {item.genre}
+                </span>
+                {item.title}
+              </div>
+              <div
+                style={{
+                  ...TYPOGRAPHY.body2["regular"],
+                  color: COLORS.grayscale[1300],
+                }}
+              >
+                <div>
+                  <span
+                    style={{
+                      ...TYPOGRAPHY.caption["medium"],
+                      color: COLORS.grayscale[700],
+                    }}
+                  >
+                    배역
+                  </span>{" "}
+                  {item.status}
+                </div>
+                <div>
+                  <span
+                    style={{
+                      ...TYPOGRAPHY.caption["medium"],
+                      color: COLORS.grayscale[700],
+                    }}
+                  >
+                    상태
+                  </span>{" "}
+                  {item.status}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div>
-      {data.map((item) => (
-        <div key={item.id}>ArtistCardContainer</div>
+      {newArtistData.map((item) => (
+        <div key={item.id}>
+          <div
+            style={{
+              width: "86px",
+              height: "86px",
+              backgroundColor: COLORS.grayscale[1300],
+            }}
+          ></div>
+          <div>
+            <div>{item.name}</div>
+            <div>프로젝트 {item.title}</div>
+            <div>상태 {item.status}</div>
+          </div>
+        </div>
       ))}
     </div>
   );
 };
 
+type SimpleArtistType = {
+  id: number;
+  name: string;
+  title: string;
+  status: string;
+  statusCode: number;
+  image: string;
+};
+
+type SimpleProjectType = {
+  id: number;
+  title: string;
+  genre: string;
+  status: string;
+  statusCode: number;
+  image: string;
+  company: string;
+};
+
 const ConnectionPage = () => {
   const { user } = useUser();
+  console.log("user", user);
   const [viewMode, setViewMode] = useState<"sent" | "received">("sent");
-  const [sentList, setSentList] = useState([]);
-  const [receivedList, setReceivedList] = useState([]);
+  const [sentList, setSentList] = useState<
+    SimpleArtistType[] | SimpleProjectType[]
+  >(SENT_PROJECT_DATA);
+  const [receivedList, setReceivedList] = useState<
+    SimpleArtistType[] | SimpleProjectType[]
+  >(SENT_PROJECT_DATA);
   const handleModeChange = (mode: "sent" | "received") => {
     setViewMode(mode);
   };
+
+  // /api/connect/getRecvProjectList -> 아티스트가 받은 연결
+  // /api/connect/getSendProjectList -> 아티스트가 보낸 연결
+
+  // /api/connect/getRecvArtistList -> 캐스터가 받은 연결
+  // /api/connect/getSendArtistList -> 캐스터가 보낸 연결
+
+  const fetchSentList = useCallback(async () => {
+    if (user.category === 1) {
+      // 캐스터
+      const response = await customAxios.get("/api/connect/getSendArtistList");
+      return response.data;
+    } else {
+      // 아티스트
+      const response = await customAxios.get("/api/connect/getSendProjectList");
+      return response.data;
+    }
+  }, [user.category]);
+
+  const fetchReceivedList = useCallback(async () => {
+    if (user.category === 1) {
+      // 캐스터
+      const response = await customAxios.get("/api/connect/getRecvArtistList");
+      return response.data;
+    } else {
+      // 아티스트
+      const response = await customAxios.get("/api/connect/getRecvProjectList");
+      return response.data;
+    }
+  }, [user.category]);
+
+  useEffect(() => {
+    const getData = async () => {
+      const sentData = await fetchSentList();
+      // setSentList(sentData);
+      const receivedData = await fetchReceivedList();
+      // setReceivedList(receivedData);
+    };
+    getData();
+  }, [fetchReceivedList, fetchSentList]);
 
   return (
     <Container>
@@ -237,9 +445,9 @@ const ConnectionPage = () => {
         </ArtistProjectButton>
       </ArtistProjectButtonContainer>
       {viewMode === "sent" ? (
-        <SentList data={sentList} />
+        <SentList category={1} data={sentList} />
       ) : (
-        <ReceivedList data={receivedList} />
+        <ReceivedList category={1} data={receivedList} />
       )}
       <GNB />
     </Container>

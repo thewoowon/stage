@@ -67,7 +67,7 @@ customAxios.interceptors.response.use(
 
       isRefreshing = true;
       try {
-        const res = await customAxios.post("/auth/token/reissue"); // refreshToken은 쿠키 자동 전송
+        const res = await customAxios.post("/api/token/refresh"); // refreshToken은 쿠키 자동 전송
         const newAccessToken = res.data.accessToken;
 
         if (!newAccessToken) throw new Error("토큰 재발급 실패");
