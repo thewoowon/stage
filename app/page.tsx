@@ -97,7 +97,7 @@ export default function Home() {
   console.log("user:", user);
 
   // ✅ 인증 상태에 따라 분기 렌더링
-  if (isAuthenticated) {
+  if (true) {
     return <SearchMainView />;
   }
 

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, { createContext, useState, useContext } from "react";
 
 type UserContextType = {
   user: User;
@@ -14,7 +14,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User>({
     id: 0,
-    category: null,
+    category: 0,
     email: "",
     name: "",
     profileImage: "",

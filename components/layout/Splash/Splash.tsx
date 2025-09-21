@@ -1,6 +1,5 @@
 "use client";
 
-import { COLORS } from "@/styles/color";
 import styled from "@emotion/styled";
 import { useEffect, useState } from "react";
 

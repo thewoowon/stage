@@ -1,8 +1,4 @@
-const LogoText = ({
-  width = 140,
-  height = 35,
-  fill = "#111111",
-}: SvgIconProps) => {
+const LogoText = ({ width = 140, height = 35 }: SvgIconProps) => {
   return (
     <svg
       width={width}

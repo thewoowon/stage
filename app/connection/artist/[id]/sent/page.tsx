@@ -128,15 +128,6 @@ const ArtistConnectionPage = ({
     enabled: !!user?.id && user?.category === 2,
   });
 
-  const handleSending = () => {
-    if (user.category === 1) {
-      window.location.href =
-        "https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=email%20profile&access_type=offline&prompt=consent";
-    } else {
-      router.push(`/connection/artist/${id}/send`);
-    }
-  };
-
   if (!data || isLoading) {
     return (
       <Container>
@@ -161,9 +152,6 @@ const ArtistConnectionPage = ({
             ></Title>
           </div>
         </div>
-        <ButtonBox>
-          <Button onClick={handleSending}>연결 보내기</Button>
-        </ButtonBox>
       </Container>
     );
   }
@@ -378,14 +366,6 @@ const ArtistConnectionPage = ({
           </div>
         </div>
       </div>
-      <ButtonBox>
-        <Button
-          onClick={handleSending}
-          disabled={!project || message.length === 0 || message.length > 300}
-        >
-          연결 보내기
-        </Button>
-      </ButtonBox>
     </Container>
   );
 };

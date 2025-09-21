@@ -39,8 +39,9 @@ customAxios.interceptors.request.use((config) => {
   const token = getToken();
   if (token && !config.url?.startsWith("auth")) {
     console.log("Attaching token to request:", token);
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${1}`;
   }
+  config.headers.Authorization = `Bearer ${1}`;
   return config;
 });
 

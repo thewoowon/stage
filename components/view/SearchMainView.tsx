@@ -2,13 +2,20 @@ import styled from "@emotion/styled";
 import Header from "../layout/Header";
 import GNB from "../layout/GNB";
 import { COLORS } from "@/styles/color";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TYPOGRAPHY } from "@/styles/typography";
 import DownChevronIcon from "../svg/DownChevronIcon";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import customAxios from "@/lib/axios";
+import { GENRE_LIST } from "@/constants";
+import {
+  ArtistListResponseType,
+  ArtistResponseType,
+  ProjectListResponseType,
+  ProjectResponseType,
+} from "@/type";
 
 export const ARTIST_DATA: ArtistType[] = [
   {
@@ -168,17 +175,7 @@ export const PROJECT_DATA: ProjectType[] = [
   },
 ];
 
-const THEMES = [
-  { id: 0, name: "대중음악" },
-  { id: 1, name: "무용" },
-  { id: 2, name: "뮤지컬" },
-  { id: 3, name: "클래식" },
-  { id: 4, name: "연극" },
-  { id: 5, name: "서커스/마술" },
-  { id: 6, name: "국악" },
-];
-
-const SORT_OPTIONS = ["최신순", "인기순", "과거순"];
+const SORT_OPTIONS = ["최신순", "인기순"];
 
 const SortOptionsContextMenu = ({
   open,
@@ -236,7 +233,43 @@ const ContextMenuItem = styled.div`
   }
 `;
 
-const ArtistList = ({ artist }: { artist: ArtistType[] }) => {
+const ArtistList = ({
+  artist,
+  isLoading,
+}: {
+  artist: ArtistResponseType[];
+  isLoading: boolean;
+}) => {
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          flex: 1,
+          textAlign: "center",
+          marginTop: "20px",
+          ...TYPOGRAPHY.body1["regular"],
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
+
+  if (artist.length === 0) {
+    return (
+      <div
+        style={{
+          flex: 1,
+          textAlign: "center",
+          marginTop: "20px",
+          ...TYPOGRAPHY.body1["semiBold"],
+        }}
+      >
+        검색 결과가 없습니다.
+      </div>
+    );
+  }
+
   return (
     <ArtistListContainer>
       {artist.map((artist) => (
@@ -246,21 +279,31 @@ const ArtistList = ({ artist }: { artist: ArtistType[] }) => {
   );
 };
 
-const ArtistCard = ({ artist }: { artist: ArtistType }) => {
+const ArtistCard = ({ artist }: { artist: ArtistResponseType }) => {
   const router = useRouter();
   return (
     <ArtistCardContainer
       onClick={() => router.push(`/search/artist/${artist.id}`)}
     >
       <div style={{ position: "relative", width: "100%", height: "164px" }}>
-        <Image
-          src={artist.profileImage}
-          alt={artist.name}
-          fill
-          sizes="100%"
-          style={{ objectFit: "cover" }}
-          priority
-        />
+        {artist.image ? (
+          <Image
+            src={artist.image}
+            alt={artist.name}
+            fill
+            sizes="100%"
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: COLORS.grayscale[500],
+            }}
+          ></div>
+        )}
       </div>
       <div
         style={{
@@ -271,7 +314,7 @@ const ArtistCard = ({ artist }: { artist: ArtistType }) => {
         }}
       >
         <div>
-          {artist.tags.map((tag, index) => (
+          {artist.categories?.map((category, index) => (
             <span
               key={index}
               style={{
@@ -282,7 +325,7 @@ const ArtistCard = ({ artist }: { artist: ArtistType }) => {
                 marginRight: 4,
               }}
             >
-              {tag}
+              {category.genreName}
             </span>
           ))}
         </div>
@@ -303,7 +346,7 @@ const ArtistCard = ({ artist }: { artist: ArtistType }) => {
           }}
         >
           레벨
-          {artist.level}/ {artist.score}
+          {artist.level}/ {artist.finalScore || 0}
         </div>
       </div>
     </ArtistCardContainer>
@@ -335,7 +378,43 @@ const ArtistCardContainer = styled.div`
   cursor: pointer;
 `;
 
-const ProjectList = ({ project }: { project: ProjectType[] }) => {
+const ProjectList = ({
+  project,
+  isLoading,
+}: {
+  project: ProjectResponseType[];
+  isLoading: boolean;
+}) => {
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          flex: 1,
+          textAlign: "center",
+          marginTop: "20px",
+          ...TYPOGRAPHY.body1["regular"],
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
+
+  if (project.length === 0) {
+    return (
+      <div
+        style={{
+          flex: 1,
+          textAlign: "center",
+          marginTop: "20px",
+          ...TYPOGRAPHY.body1["semiBold"],
+        }}
+      >
+        검색 결과가 없습니다.
+      </div>
+    );
+  }
+
   return (
     <ProjectListContainer>
       {project.map((project) => (
@@ -345,21 +424,31 @@ const ProjectList = ({ project }: { project: ProjectType[] }) => {
   );
 };
 
-const ProjectCard = ({ project }: { project: ProjectType }) => {
+const ProjectCard = ({ project }: { project: ProjectResponseType }) => {
   const router = useRouter();
   return (
     <ProjectCardContainer
       onClick={() => router.push(`/search/project/${project.id}`)}
     >
       <div style={{ position: "relative", width: "100%", height: "164px" }}>
-        <Image
-          src={project.thumbnailImage}
-          alt={project.title}
-          fill
-          sizes="100%"
-          style={{ objectFit: "cover" }}
-          priority
-        />
+        {project.image ? (
+          <Image
+            src={project.image}
+            alt={project.title}
+            fill
+            sizes="100%"
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundColor: COLORS.grayscale[500],
+            }}
+          ></div>
+        )}
       </div>
       <div
         style={{
@@ -370,19 +459,16 @@ const ProjectCard = ({ project }: { project: ProjectType }) => {
         }}
       >
         <div style={{ display: "flex", flexDirection: "row", gap: 4 }}>
-          {project.artist.map((artist) => (
-            <div
-              key={artist.id}
-              style={{
-                ...TYPOGRAPHY.caption["medium"],
-                color: COLORS.grayscale[100],
-                backgroundColor: COLORS.primary[500],
-                padding: "2px 6px",
-              }}
-            >
-              {artist.name}
-            </div>
-          ))}
+          <div
+            style={{
+              ...TYPOGRAPHY.caption["medium"],
+              color: COLORS.grayscale[100],
+              backgroundColor: COLORS.primary[500],
+              padding: "2px 6px",
+            }}
+          >
+            {project.genre}
+          </div>
         </div>
         <div
           style={{
@@ -397,7 +483,7 @@ const ProjectCard = ({ project }: { project: ProjectType }) => {
             color: COLORS.grayscale[700],
           }}
         >
-          {project.description}
+          접수마감일: {project.endDate}
         </div>
       </div>
     </ProjectCardContainer>
@@ -434,51 +520,57 @@ const SearchMainView = () => {
   const [selectedTheme, setSelectedTheme] = useState<number[]>([]);
   const [sortOption, setSortOption] = useState<string>("최신순");
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
-  const [count, setCount] = useState(84);
 
   const handleModeChange = (mode: "artist" | "project") => {
     setViewMode(mode);
   };
 
-  const { data: artistData } = useQuery({
-    queryKey: ["artistList", selectedTheme, sortOption],
-    queryFn: async () => {
-      // Replace with your API call
-      const response = await customAxios("/api/stage/getStageList", {
-        params: {
-          genreListList: [],
-          startNumber: 0,
-          offsetNumber: 20,
-          sort: 0,
-        },
-      });
+  const { data: artistData, isLoading: artistIsLoading } =
+    useQuery<ArtistListResponseType>({
+      queryKey: ["artistList", selectedTheme, sortOption],
+      queryFn: async () => {
+        // Replace with your API call
+        const response = await customAxios("/api/stage/getStageList", {
+          params: {
+            genreListList: selectedTheme,
+            startNumber: 0,
+            offsetNumber: 50,
+            sort: 0,
+          },
+        });
 
-      if (response.status !== 200) {
-        throw new Error("Network response was not ok");
-      }
-      return response.data;
-    },
-  });
+        if (response.status !== 200) {
+          throw new Error("Network response was not ok");
+        }
+        return response.data;
+      },
+    });
 
-  const { data: projectData } = useQuery({
-    queryKey: ["projectList", selectedTheme, sortOption],
-    queryFn: async () => {
-      // Replace with your API call
-      const response = await customAxios("/api/project/getProjectList", {
-        params: {
-          genreListList: [],
-          startNumber: 0,
-          offsetNumber: 20,
-          sort: 0,
-        },
-      });
+  const { data: projectData, isLoading: projectIsLoading } =
+    useQuery<ProjectListResponseType>({
+      queryKey: ["projectList", selectedTheme, sortOption],
+      queryFn: async () => {
+        // Replace with your API call
+        const response = await customAxios("/api/project/getProjectList", {
+          params: {
+            genreList: selectedTheme,
+            startNumber: 0,
+            offsetNumber: 50,
+            sort: 0,
+          },
+        });
 
-      if (response.status !== 200) {
-        throw new Error("Network response was not ok");
-      }
-      return response.data;
-    },
-  });
+        if (response.status !== 200) {
+          throw new Error("Network response was not ok");
+        }
+        return response.data;
+      },
+    });
+
+  useEffect(() => {
+    console.log("artistData: ", artistData);
+    console.log("projectData: ", projectData);
+  }, [artistData, projectData]);
 
   return (
     <Container>
@@ -510,30 +602,30 @@ const SearchMainView = () => {
         </ArtistProjectButton>
       </ArtistProjectButtonContainer>
       <HorizontalThemeScrollContainer>
-        {THEMES.map((theme) => (
+        {GENRE_LIST.map((theme) => (
           <ThemeButton
-            key={theme.id}
+            key={theme.genreId}
             style={{
               ...TYPOGRAPHY.body2["medium"],
-              color: selectedTheme.includes(theme.id)
+              color: selectedTheme.includes(theme.genreId)
                 ? COLORS.grayscale[100]
                 : COLORS.grayscale[700],
               border: `1px solid ${COLORS.grayscale[500]}`,
-              backgroundColor: selectedTheme.includes(theme.id)
+              backgroundColor: selectedTheme.includes(theme.genreId)
                 ? COLORS.grayscale[1300]
                 : "transparent",
             }}
             onClick={() => {
-              if (selectedTheme.includes(theme.id)) {
+              if (selectedTheme.includes(theme.genreId)) {
                 setSelectedTheme((prev) =>
-                  prev.filter((id) => id !== theme.id)
+                  prev.filter((id) => id !== theme.genreId)
                 );
               } else {
-                setSelectedTheme((prev) => [...prev, theme.id]);
+                setSelectedTheme((prev) => [...prev, theme.genreId]);
               }
             }}
           >
-            {theme.name}
+            {theme.genreName}
           </ThemeButton>
         ))}
       </HorizontalThemeScrollContainer>
@@ -543,7 +635,10 @@ const SearchMainView = () => {
             ...TYPOGRAPHY.body2["medium"],
           }}
         >
-          {count}개
+          {viewMode === "artist"
+            ? artistData?.stageList.length || 0
+            : projectData?.projectList.length || 0}
+          개
         </div>
         <SortButton
           style={{
@@ -569,9 +664,15 @@ const SearchMainView = () => {
         </SortButton>
       </FlexRowSpaceBetween>
       {viewMode === "artist" ? (
-        <ArtistList artist={ARTIST_DATA} />
+        <ArtistList
+          artist={artistData?.stageList || []}
+          isLoading={artistIsLoading}
+        />
       ) : (
-        <ProjectList project={PROJECT_DATA} />
+        <ProjectList
+          project={projectData?.projectList || []}
+          isLoading={projectIsLoading}
+        />
       )}
       <GNB />
       {contextMenuOpen && (

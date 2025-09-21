@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import styled from "@emotion/styled";
 
@@ -87,36 +87,4 @@ const MVideo = styled.video`
   @media (min-width: 768px) {
     display: none;
   }
-`;
-
-const Shade = styled.div`
-  background:
-    radial-gradient(
-      137.47% 43.57% at 50% 50%,
-      rgba(0, 0, 0, 0) 0%,
-      rgba(0, 0, 0, 0.2) 100%
-    ),
-    linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.1) 100%),
-    linear-gradient(
-      187deg,
-      rgba(0, 0, 0, 0) 56.14%,
-      rgba(0, 0, 0, 0.1) 72.48%,
-      #000 98.3%
-    );
-  background-blend-mode: normal, normal, normal;
-  background-position:
-    1.123px -839.09px,
-    center,
-    center;
-  background-repeat: no-repeat, no-repeat, no-repeat;
-  background-size:
-    100.158% 53.767%,
-    cover,
-    cover;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
 `;

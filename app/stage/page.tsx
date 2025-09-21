@@ -203,9 +203,9 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
       <Container>
         <OuterBox>
           <ShadowHeader>
-            <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
+            {/* <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
               <LeftChevronIcon fill="#FFFFFF" />
-            </div>
+            </div> */}
             <div
               onClick={() => router.push("/stage/edit/profile")}
               style={{ cursor: "pointer" }}
@@ -616,9 +616,9 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
     <Container>
       <OuterBox>
         <ShadowHeader>
-          <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
+          {/* <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
             <LeftChevronIcon fill="#FFFFFF" />
-          </div>
+          </div> */}
           <div
             onClick={() => router.push("/stage/edit/profile")}
             style={{ cursor: "pointer" }}
@@ -950,7 +950,7 @@ const ShadowHeader = styled.div`
   height: 57px;
   z-index: 10;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 0 16px;
   background: linear-gradient(

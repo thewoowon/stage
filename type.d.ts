@@ -112,6 +112,79 @@ declare global {
   };
 }
 
+type ArtistResponseType = {
+  id: number;
+  name: string;
+  finalScore: string;
+  level: string;
+  image: string;
+  categories: {
+    genreId: number;
+    genreName: string;
+  }[];
+};
+
+type ArtistListResponseType = {
+  totCnt: number;
+  stageList: ArtistResponseType[];
+};
+
+type ProjectResponseType = {
+  id: number;
+  title: string;
+  image: string;
+  genre: string;
+  endDate: string;
+};
+
+type ProjectListResponseType = {
+  totCnt: number;
+  projectList: ProjectResponseType[];
+};
+
+type ArtistDetailResponseType = {
+  id: number;
+  name: string;
+  grade: string;
+  score: string;
+  instagramLink: string;
+  youtubeLink: string;
+  birthDate: string;
+  weight: string;
+  categoryCode: string;
+  categoryName: string;
+  specialty: string;
+  genreList: {
+    genreId: number;
+    genreName: string;
+  }[];
+  snsList: {
+    id: 1;
+    title: string;
+    type: string;
+    url: string;
+  }[];
+  portfolioList: {
+    id: 1;
+    title: string;
+    content: string;
+    startDate: string;
+    endDate: string;
+    category: {
+      genreId: number;
+      genreName: string;
+    };
+  }[];
+  artistList: {
+    score: string;
+    grade: string;
+    name: string;
+    image: string;
+    categoryName: string;
+  }[];
+  image: string;
+};
+
 export type {
   SvgIconProps,
   User,
@@ -122,4 +195,11 @@ export type {
   SpeechRecognitionResultList,
   SpeechRecognitionResult,
   SpeechRecognitionAlternative,
+  ArtistType,
+  ProjectType,
+  ArtistResponseType,
+  ArtistListResponseType,
+  ProjectResponseType,
+  ProjectListResponseType,
+  ArtistDetailResponseType,
 };

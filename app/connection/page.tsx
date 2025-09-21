@@ -1,5 +1,7 @@
 "use client";
 import GNB from "@/components/layout/GNB";
+import SandWatchIcon from "@/components/svg/SandWatchIcon";
+import XWithCircleIcon from "@/components/svg/XWithCircleIcon";
 import { useUser } from "@/contexts/UserContext";
 import customAxios from "@/lib/axios";
 import { COLORS } from "@/styles/color";
@@ -19,15 +21,18 @@ const SENT_PROJECT_DATA = [
       "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
     company: "tvN",
   },
+];
+
+const RECEIEVED_PROJECT_DATA = [
   {
-    id: 2,
-    title: "이태원 클라쓰",
+    id: 1,
+    title: "나의 아저씨",
     genre: "드라마",
     status: "촬영중",
     statusCode: 1,
     image:
       "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
-    company: "JTBC",
+    company: "tvN",
   },
 ];
 
@@ -41,9 +46,12 @@ const SENT_ARTIST_DATA = [
     image:
       "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
   },
+];
+
+const RECEIEVED_ARTIST_DATA = [
   {
-    id: 2,
-    name: "박서준",
+    id: 1,
+    name: "아이유",
     title: "배우",
     status: "섭외중",
     statusCode: 1,
@@ -81,6 +89,7 @@ const SentList = ({
   const newProjectData = data as SimpleProjectType[];
   const newArtistData = data as SimpleArtistType[];
 
+  // 아티스트
   if (category === 1) {
     return (
       <div
@@ -102,16 +111,22 @@ const SentList = ({
               cursor: "pointer",
             }}
             onClick={() => {
-              router.push(`/connection/project/${item.id}/send`);
+              router.push(`/connection/artist/${item.id}/sent`);
             }}
           >
             <div
               style={{
+                position: "relative",
                 width: "86px",
                 height: "86px",
-                backgroundColor: COLORS.grayscale[1300],
+                backgroundColor: COLORS.grayscale[500],
               }}
-            ></div>
+            >
+              <div style={{ position: "absolute", top: 4, left: 4 }}>
+                <XWithCircleIcon />
+                {false && <SandWatchIcon />}
+              </div>
+            </div>
             <div
               style={{
                 display: "flex",
@@ -146,26 +161,46 @@ const SentList = ({
                   color: COLORS.grayscale[1300],
                 }}
               >
-                <div>
-                  <span
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: 3,
+                    alignItems: "center",
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  <div
                     style={{
+                      minWidth: "30px",
+                      width: "30px",
                       ...TYPOGRAPHY.caption["medium"],
                       color: COLORS.grayscale[700],
                     }}
                   >
                     배역
-                  </span>{" "}
+                  </div>{" "}
                   {item.status}
                 </div>
-                <div>
-                  <span
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: 3,
+                    alignItems: "center",
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  <div
                     style={{
+                      minWidth: "30px",
+                      width: "30px",
                       ...TYPOGRAPHY.caption["medium"],
                       color: COLORS.grayscale[700],
                     }}
                   >
                     상태
-                  </span>{" "}
+                  </div>{" "}
                   {item.status}
                 </div>
               </div>
@@ -196,7 +231,7 @@ const SentList = ({
             cursor: "pointer",
           }}
           onClick={() => {
-            router.push(`/connection/artist/${item.id}/send`);
+            router.push(`/connection/project/${item.id}/sent`);
           }}
         >
           <div
@@ -263,11 +298,17 @@ const ReceivedList = ({
           >
             <div
               style={{
+                position: "relative",
                 width: "86px",
                 height: "86px",
-                backgroundColor: COLORS.grayscale[1300],
+                backgroundColor: COLORS.grayscale[500],
               }}
-            ></div>
+            >
+              {" "}
+              <div style={{ position: "absolute", top: 4, left: 4 }}>
+                <XWithCircleIcon />
+              </div>
+            </div>
             <div
               style={{
                 display: "flex",
@@ -302,26 +343,46 @@ const ReceivedList = ({
                   color: COLORS.grayscale[1300],
                 }}
               >
-                <div>
-                  <span
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: 3,
+                    alignItems: "center",
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  <div
                     style={{
+                      minWidth: "30px",
+                      width: "30px",
                       ...TYPOGRAPHY.caption["medium"],
                       color: COLORS.grayscale[700],
                     }}
                   >
                     배역
-                  </span>{" "}
+                  </div>{" "}
                   {item.status}
                 </div>
-                <div>
-                  <span
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: 3,
+                    alignItems: "center",
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  <div
                     style={{
+                      minWidth: "30px",
+                      width: "30px",
                       ...TYPOGRAPHY.caption["medium"],
                       color: COLORS.grayscale[700],
                     }}
                   >
                     상태
-                  </span>{" "}
+                  </div>{" "}
                   {item.status}
                 </div>
               </div>
@@ -379,10 +440,10 @@ const ConnectionPage = () => {
   const [viewMode, setViewMode] = useState<"sent" | "received">("sent");
   const [sentList, setSentList] = useState<
     SimpleArtistType[] | SimpleProjectType[]
-  >(SENT_PROJECT_DATA);
+  >(SENT_ARTIST_DATA);
   const [receivedList, setReceivedList] = useState<
     SimpleArtistType[] | SimpleProjectType[]
-  >(SENT_PROJECT_DATA);
+  >(RECEIEVED_ARTIST_DATA);
   const handleModeChange = (mode: "sent" | "received") => {
     setViewMode(mode);
   };
@@ -395,24 +456,24 @@ const ConnectionPage = () => {
 
   const fetchSentList = useCallback(async () => {
     if (user.category === 1) {
-      // 캐스터
-      const response = await customAxios.get("/api/connect/getSendArtistList");
-      return response.data;
-    } else {
       // 아티스트
       const response = await customAxios.get("/api/connect/getSendProjectList");
+      return response.data;
+    } else {
+      // 캐스터
+      const response = await customAxios.get("/api/connect/getSendArtistList");
       return response.data;
     }
   }, [user.category]);
 
   const fetchReceivedList = useCallback(async () => {
     if (user.category === 1) {
-      // 캐스터
-      const response = await customAxios.get("/api/connect/getRecvArtistList");
-      return response.data;
-    } else {
       // 아티스트
       const response = await customAxios.get("/api/connect/getRecvProjectList");
+      return response.data;
+    } else {
+      // 캐스터
+      const response = await customAxios.get("/api/connect/getRecvArtistList");
       return response.data;
     }
   }, [user.category]);
@@ -420,8 +481,10 @@ const ConnectionPage = () => {
   useEffect(() => {
     const getData = async () => {
       const sentData = await fetchSentList();
+      console.log("sentData", sentData);
       // setSentList(sentData);
       const receivedData = await fetchReceivedList();
+      console.log("receivedData", receivedData);
       // setReceivedList(receivedData);
     };
     getData();

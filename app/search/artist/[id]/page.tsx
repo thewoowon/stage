@@ -10,6 +10,9 @@ import { COLORS } from "@/styles/color";
 import InstagramIcon from "@/components/svg/InstagramIcon";
 import YoutubeIcon from "@/components/svg/YoutubeIcon";
 import { useUser } from "@/contexts/UserContext";
+import { useQuery } from "@tanstack/react-query";
+import customAxios from "@/lib/axios";
+import { ArtistDetailResponseType } from "@/type";
 
 const AI_RECOMMENDED_ARTISTS: ArtistType[] = [
   {
@@ -78,15 +81,23 @@ const AI_RECOMMENDED_ARTISTS: ArtistType[] = [
   },
 ];
 
-const ArtistCard = ({ artist }: { artist: ArtistType }) => {
+const ArtistCard = ({
+  artist,
+}: {
+  artist: {
+    score: string;
+    grade: string;
+    name: string;
+    image: string;
+    categoryName: string;
+  };
+}) => {
   const router = useRouter();
   return (
-    <ArtistCardContainer
-      onClick={() => router.push(`/search/artist/${artist.id}`)}
-    >
+    <ArtistCardContainer>
       <div style={{ position: "relative", width: "140px", height: "140px" }}>
         <Image
-          src={artist.profileImage}
+          src={artist.image}
           alt={artist.name}
           fill
           sizes="100%"
@@ -103,20 +114,17 @@ const ArtistCard = ({ artist }: { artist: ArtistType }) => {
         }}
       >
         <div>
-          {artist.tags.slice(0, 1).map((tag, index) => (
-            <span
-              key={index}
-              style={{
-                ...TYPOGRAPHY.caption["medium"],
-                color: COLORS.grayscale[100],
-                backgroundColor: COLORS.primary[500],
-                padding: "2px 6px",
-                marginRight: 4,
-              }}
-            >
-              {tag}
-            </span>
-          ))}
+          <span
+            style={{
+              ...TYPOGRAPHY.caption["medium"],
+              color: COLORS.grayscale[100],
+              backgroundColor: COLORS.primary[500],
+              padding: "2px 6px",
+              marginRight: 4,
+            }}
+          >
+            {artist.categoryName}
+          </span>
         </div>
         <div
           style={{
@@ -135,7 +143,7 @@ const ArtistCard = ({ artist }: { artist: ArtistType }) => {
           }}
         >
           레벨
-          {artist.level}/ {artist.score}
+          {artist.grade}/ {artist.score}
         </div>
       </div>
     </ArtistCardContainer>
@@ -163,7 +171,25 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [imageOverlayVisible, setImageOverlayVisible] = useState(false);
   const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
 
-  const artist = ARTIST_DATA.find((artist) => artist.id === Number(id));
+  const { data, isLoading } = useQuery<ArtistDetailResponseType>({
+    queryKey: ["artist", id],
+    queryFn: async () => {
+      const response = await customAxios.get(`/api/stage/getStage`, {
+        params: { stageId: id },
+      });
+
+      if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+      }
+
+      return response.data;
+    },
+    enabled: !!id,
+  });
+
+  const handleConnection = () => {
+    router.push(`/connection/artist/${id}/send`);
+  };
 
   useEffect(() => {
     if (status === "connected") {
@@ -171,20 +197,44 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   }, [status]);
 
-  if (!artist) {
-    return <div>Artist not found</div>;
+  if (!data || isLoading) {
+    return (
+      <Container>
+        <ShadowHeader>
+          <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
+            <LeftChevronIcon fill="#FFFFFF" />
+          </div>
+        </ShadowHeader>
+        <ImageWrapper
+          style={{
+            backgroundColor: COLORS.grayscale[200],
+          }}
+        >
+          {data?.image && (
+            <Image
+              src={data.image}
+              alt={data.name}
+              fill
+              sizes="100%"
+              style={{ objectFit: "cover" }}
+              priority
+            />
+          )}
+        </ImageWrapper>
+        <div
+          style={{
+            width: "100%",
+            height: "100vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ ...TYPOGRAPHY.body1["medium"] }}>Loading...</div>
+        </div>
+      </Container>
+    );
   }
-
-  const handleConnection = () => {
-    router.push(`/connection/artist/${id}/send`);
-    return;
-    if (user.category === 1) {
-      window.location.href =
-        "https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=email%20profile&access_type=offline&prompt=consent";
-    } else {
-      router.push(`/connection/artist/${id}/send`);
-    }
-  };
 
   return (
     <Container>
@@ -198,14 +248,16 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           backgroundColor: COLORS.grayscale[200],
         }}
       >
-        <Image
-          src={artist.profileImage}
-          alt={artist.name}
-          fill
-          sizes="100%"
-          style={{ objectFit: "cover" }}
-          priority
-        />
+        {data?.image && (
+          <Image
+            src={data.image}
+            alt={data.name}
+            fill
+            sizes="100%"
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        )}
       </ImageWrapper>
       <div
         style={{
@@ -225,18 +277,34 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           }}
         >
           레벨
-          {artist.level} | {artist.score}
+          {data?.grade} | {data?.score}
         </div>
         <div
           style={{
             ...TYPOGRAPHY.h2["bold"],
           }}
         >
-          {artist.name}
+          {data?.name}
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          <InstagramIcon />
-          <YoutubeIcon />
+          <div
+            style={{ cursor: data.instagramLink ? "pointer" : "not-allowed" }}
+            onClick={() => {
+              if (!data.instagramLink) return;
+              router.push(data.instagramLink || "");
+            }}
+          >
+            <InstagramIcon />
+          </div>
+          <div
+            style={{ cursor: data.youtubeLink ? "pointer" : "not-allowed" }}
+            onClick={() => {
+              if (!data.youtubeLink) return;
+              router.push(data.youtubeLink || "");
+            }}
+          >
+            <YoutubeIcon />
+          </div>
         </div>
       </div>
       <div style={{ padding: "0 16px", width: "100%" }}>
@@ -250,7 +318,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           >
             생년
           </div>
-          <div>{artist.birthDate}</div>
+          <div>
+            {data.birthDate ? data.birthDate.slice(0, 10) : "알 수 없음"}
+          </div>
         </Flex>
         <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
           <div
@@ -262,7 +332,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           >
             신장
           </div>
-          <div>{artist.height} cm</div>
+          <div>{data.weight ? `${data.weight} cm` : "알 수 없음"}</div>
         </Flex>
         <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
           <div
@@ -274,7 +344,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           >
             체중
           </div>
-          <div>{artist.weight} kg</div>
+          <div>{data.weight ? `${data.weight} kg` : "알 수 없음"}</div>
         </Flex>
         <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
           <div
@@ -287,9 +357,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             특기
           </div>
           <div>
-            {Array.isArray(artist.specialty)
-              ? artist.specialty.join(", ")
-              : "없음"}
+            {Array.isArray(data.specialty) ? data.specialty.join(", ") : "없음"}
           </div>
         </Flex>
         <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
@@ -303,19 +371,21 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             분야
           </div>
           <div style={{ display: "flex", gap: 6 }}>
-            {artist.tags.map((tag, index) => (
-              <span
-                key={index}
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.primary[500],
-                  padding: "2px 6px",
-                }}
-              >
-                {tag}
-              </span>
-            ))}
+            {data.genreList.length === 0 && "없음"}
+            {data.genreList.length > 0 &&
+              data.genreList.map((genre, index) => (
+                <span
+                  key={index}
+                  style={{
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[100],
+                    backgroundColor: COLORS.primary[500],
+                    padding: "2px 6px",
+                  }}
+                >
+                  {genre.genreName}
+                </span>
+              ))}
           </div>
         </Flex>
       </div>
@@ -329,74 +399,95 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           공식 SNS
         </Title>
         <HorizontalThemeScrollContainer>
-          <SnsCard
-            onClick={() => {
-              setImageOverlayVisible(true);
-            }}
-          >
-            <div
-              style={{ position: "relative", width: "190px", height: "210px" }}
-            >
-              <Image
-                src="/images/oblong-profiles/men/man-1.png"
-                alt="Instagram"
-                fill
-                sizes="100%"
-                style={{ objectFit: "cover" }}
-                priority
-              />
-            </div>
-            <FlexRow
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                justifyContent: "space-between",
-              }}
-            >
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                Instagram
-              </div>
-              <InstagramIcon width={20} height={20} />
-            </FlexRow>
-          </SnsCard>
-          <SnsCard
-            onClick={() => {
-              setVideoOverlayVisible(true);
-            }}
-          >
-            <div
-              style={{ position: "relative", width: "190px", height: "210px" }}
-            >
-              <Image
-                src="/images/oblong-profiles/men/man-1.png"
-                alt="Instagram"
-                fill
-                sizes="100%"
-                style={{ objectFit: "cover" }}
-                priority
-              />
-            </div>
-            <FlexRow
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                justifyContent: "space-between",
-              }}
-            >
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                Youtube
-              </div>
-              <YoutubeIcon width={20} height={20} />
-            </FlexRow>
-          </SnsCard>
+          {data.snsList.length === 0 && "없음"}
+          {data.snsList.length > 0 &&
+            data.snsList.map((sns) => {
+              if (sns.type === "1") {
+                return (
+                  <SnsCard
+                    key={sns.id}
+                    onClick={() => {
+                      setImageOverlayVisible(true);
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "190px",
+                        height: "210px",
+                      }}
+                    >
+                      <Image
+                        src="/images/oblong-profiles/men/man-1.png"
+                        alt="Instagram"
+                        fill
+                        sizes="100%"
+                        style={{ objectFit: "cover" }}
+                        priority
+                      />
+                    </div>
+                    <FlexRow
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div
+                        style={{
+                          ...TYPOGRAPHY.body2["regular"],
+                        }}
+                      >
+                        Instagram
+                      </div>
+                      <InstagramIcon width={20} height={20} />
+                    </FlexRow>
+                  </SnsCard>
+                );
+              } else {
+                return (
+                  <SnsCard
+                    key={sns.id}
+                    onClick={() => {
+                      setVideoOverlayVisible(true);
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "190px",
+                        height: "210px",
+                      }}
+                    >
+                      <Image
+                        src="/images/oblong-profiles/men/man-1.png"
+                        alt="Instagram"
+                        fill
+                        sizes="100%"
+                        style={{ objectFit: "cover" }}
+                        priority
+                      />
+                    </div>
+                    <FlexRow
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div
+                        style={{
+                          ...TYPOGRAPHY.body2["regular"],
+                        }}
+                      >
+                        Youtube
+                      </div>
+                      <YoutubeIcon width={20} height={20} />
+                    </FlexRow>
+                  </SnsCard>
+                );
+              }
+            })}
         </HorizontalThemeScrollContainer>
       </div>
       <Divider />
@@ -415,111 +506,45 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             gap: 8,
           }}
         >
-          <PortfolioBox>
-            <FlexRow style={{ gap: 6 }}>
-              <div
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.grayscale[1300],
-                  padding: "2px 6px",
-                }}
-              >
-                연극
-              </div>
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["semiBold"],
-                }}
-              >
-                공연명
-              </div>
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              2023.09.21 ~ 2023.09.21
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              공연장명: 대학로 아트홀
-            </FlexRow>
-          </PortfolioBox>
-          <PortfolioBox>
-            <FlexRow style={{ gap: 6 }}>
-              <div
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.grayscale[1300],
-                  padding: "2px 6px",
-                }}
-              >
-                연극
-              </div>
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["semiBold"],
-                }}
-              >
-                공연명
-              </div>
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              2023.09.21 ~ 2023.09.21
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              공연장명: 대학로 아트홀
-            </FlexRow>
-          </PortfolioBox>
-          <PortfolioBox>
-            <FlexRow style={{ gap: 6 }}>
-              <div
-                style={{
-                  ...TYPOGRAPHY.caption["medium"],
-                  color: COLORS.grayscale[100],
-                  backgroundColor: COLORS.grayscale[1300],
-                  padding: "2px 6px",
-                }}
-              >
-                연극
-              </div>
-              <div
-                style={{
-                  ...TYPOGRAPHY.body2["semiBold"],
-                }}
-              >
-                공연명
-              </div>
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              2023.09.21 ~ 2023.09.21
-            </FlexRow>
-            <FlexRow
-              style={{
-                ...TYPOGRAPHY.body2["regular"],
-              }}
-            >
-              공연장명: 대학로 아트홀
-            </FlexRow>
-          </PortfolioBox>
+          {data.portfolioList.length === 0 && "없음"}
+          {data.portfolioList.length > 0 &&
+            data.portfolioList.map((portfolio) => (
+              <PortfolioBox key={portfolio.id}>
+                <FlexRow style={{ gap: 6 }}>
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.caption["medium"],
+                      color: COLORS.grayscale[100],
+                      backgroundColor: COLORS.grayscale[1300],
+                      padding: "2px 6px",
+                    }}
+                  >
+                    연극
+                  </div>
+                  <div
+                    style={{
+                      ...TYPOGRAPHY.body2["semiBold"],
+                    }}
+                  >
+                    공연명
+                  </div>
+                </FlexRow>
+                <FlexRow
+                  style={{
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  2023.09.21 ~ 2023.09.21
+                </FlexRow>
+                <FlexRow
+                  style={{
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  공연장명: 대학로 아트홀
+                </FlexRow>
+              </PortfolioBox>
+            ))}
         </div>
       </div>
       <Divider />
@@ -532,12 +557,14 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           AI 추천 유사 아티스트
         </Title>
         <HorizontalThemeScrollContainer>
-          {AI_RECOMMENDED_ARTISTS.map((artist) => (
-            <ArtistCard key={artist.id} artist={artist} />
-          ))}
+          {(!data.artistList || data.artistList.length === 0) && "없음"}
+          {data.artistList &&
+            data.artistList?.map((artist, index) => (
+              <ArtistCard key={index} artist={artist} />
+            ))}
         </HorizontalThemeScrollContainer>
       </div>
-      {user.category === 1 && (
+      {user.category === 2 && (
         <ButtonBox>
           <Button onClick={handleConnection}>연결 보내기</Button>
         </ButtonBox>
