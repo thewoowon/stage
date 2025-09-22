@@ -440,10 +440,10 @@ const ConnectionPage = () => {
   const [viewMode, setViewMode] = useState<"sent" | "received">("sent");
   const [sentList, setSentList] = useState<
     SimpleArtistType[] | SimpleProjectType[]
-  >(SENT_ARTIST_DATA);
+  >([]);
   const [receivedList, setReceivedList] = useState<
     SimpleArtistType[] | SimpleProjectType[]
-  >(RECEIEVED_ARTIST_DATA);
+  >([]);
   const handleModeChange = (mode: "sent" | "received") => {
     setViewMode(mode);
   };

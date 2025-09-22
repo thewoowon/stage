@@ -187,7 +187,7 @@ const ArtistConnectionPage = ({
               color: "#111111",
             }}
           >
-            제안 메시지를 작성해 <br />
+            제안 메세지를 작성해 <br />
             연결을 보내보세요
           </Title>
         </div>
@@ -351,7 +351,7 @@ const ArtistConnectionPage = ({
               marginBottom: "8px",
             }}
           >
-            제안 메시지
+            제안 메세지
           </div>
           <div
             style={{

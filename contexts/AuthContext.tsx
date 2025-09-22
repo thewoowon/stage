@@ -11,8 +11,10 @@ import { attachAuthHelpers } from "@lib/axios";
 type AuthContextType = {
   accessToken: string | null;
   setAccessToken: (token: string | null) => void;
+  refreshToken: string | null;
+  setRefreshToken: (t: string | null) => void;
   isAuthenticated: boolean;
-  setIsAuthenticated: (value: boolean) => void; // Optional setter
+  setIsAuthenticated: (value: boolean) => void;
   isLoading: boolean;
   initializeAuth: () => Promise<void>;
   logout: () => void;
@@ -26,53 +28,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // ✅ logout
   const logout = useCallback(() => {
     setAccessToken(null);
+    setRefreshToken(null);
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    // TODO: 서버 로그아웃 API 호출 추가 가능
+    setIsAuthenticated(false);
+
+    // /api/user/logout
+    fetch("/api/user/logout", { method: "POST", credentials: "include" }).catch(
+      (e) => console.error("Logout API error:", e)
+    );
   }, []);
 
   // ✅ accessToken setter (localStorage 동기화)
   const handleSetAccessToken = useCallback((token: string | null) => {
     setAccessToken(token);
-    if (token) {
-      localStorage.setItem("accessToken", token);
-    } else {
-      localStorage.removeItem("accessToken");
-    }
+    if (token) localStorage.setItem("accessToken", token);
+    else localStorage.removeItem("accessToken");
+  }, []);
+
+  // ✅ refreshToken setter (localStorage 동기화)
+  const handleSetRefreshToken = useCallback((token: string | null) => {
+    setRefreshToken(token);
+    if (token) localStorage.setItem("refreshToken", token);
+    else localStorage.removeItem("refreshToken");
   }, []);
 
   // ✅ 초기화: localStorage에서 불러오기
   const initializeAuth = useCallback(async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      if (token) {
-        handleSetAccessToken(token);
-        setIsAuthenticated(true); // ✅ 토큰 있으면 인증 상태 true로 세팅
-      } else {
-        setIsAuthenticated(false); // ✅ 없으면 false
+      const access = localStorage.getItem("accessToken");
+      const refresh = localStorage.getItem("refreshToken");
+
+      if (access) {
+        handleSetAccessToken(access);
+        setIsAuthenticated(true);
       }
+      if (refresh) {
+        handleSetRefreshToken(refresh);
+      }
+
+      if (!access) setIsAuthenticated(false);
     } catch (e) {
       console.error("Auth init error:", e);
       logout();
     } finally {
       setIsLoading(false);
     }
-  }, [handleSetAccessToken, logout]);
+  }, [handleSetAccessToken, handleSetRefreshToken, logout]);
 
   // ✅ customAxios에 helper 연결
   useEffect(() => {
     attachAuthHelpers({
-      getToken: () => accessToken,
-      setToken: handleSetAccessToken,
+      getAccessToken: () => accessToken,
+      setAccessToken: handleSetAccessToken,
+      getRefreshToken: () => refreshToken,
+      setRefreshToken: handleSetRefreshToken,
       logout,
     });
-  }, [accessToken, handleSetAccessToken, logout]);
+  }, [
+    accessToken,
+    refreshToken,
+    handleSetAccessToken,
+    handleSetRefreshToken,
+    logout,
+  ]);
 
   // ✅ 첫 진입 시 init 실행
   useEffect(() => {
@@ -84,6 +110,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         accessToken,
         setAccessToken: handleSetAccessToken,
+        refreshToken,
+        setRefreshToken: handleSetRefreshToken,
         isAuthenticated,
         setIsAuthenticated,
         isLoading,

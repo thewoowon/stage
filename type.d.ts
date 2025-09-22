@@ -142,6 +142,38 @@ type ProjectListResponseType = {
   projectList: ProjectResponseType[];
 };
 
+type GenreResponseType = {
+  genreId: number;
+  genreName: string;
+};
+
+type SNSResponseType = {
+  id: number;
+  title: string;
+  type: string;
+  url: string;
+};
+
+type PortfolioResponseType = {
+  id: number;
+  title: string;
+  content: string;
+  startDate: string;
+  endDate: string;
+  category: {
+    genreId: number;
+    genreName: string;
+  };
+};
+
+type SimpleArtistResponseType = {
+  score: string;
+  grade: string;
+  name: string;
+  image: string;
+  categoryName: string;
+};
+
 type ArtistDetailResponseType = {
   id: number;
   name: string;
@@ -154,34 +186,10 @@ type ArtistDetailResponseType = {
   categoryCode: string;
   categoryName: string;
   specialty: string;
-  genreList: {
-    genreId: number;
-    genreName: string;
-  }[];
-  snsList: {
-    id: 1;
-    title: string;
-    type: string;
-    url: string;
-  }[];
-  portfolioList: {
-    id: 1;
-    title: string;
-    content: string;
-    startDate: string;
-    endDate: string;
-    category: {
-      genreId: number;
-      genreName: string;
-    };
-  }[];
-  artistList: {
-    score: string;
-    grade: string;
-    name: string;
-    image: string;
-    categoryName: string;
-  }[];
+  genreList: GenreResponseType[];
+  snsList: SNSResponseType[];
+  portfolioList: PortfolioResponseType[];
+  artistList: SimpleArtistResponseType[];
   image: string;
 };
 
@@ -202,4 +210,8 @@ export type {
   ProjectResponseType,
   ProjectListResponseType,
   ArtistDetailResponseType,
+  GenreResponseType,
+  SNSResponseType,
+  PortfolioResponseType,
+  SimpleArtistResponseType,
 };

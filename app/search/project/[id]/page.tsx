@@ -53,7 +53,7 @@ const ProjectPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </HeaderWithTitle>
       <ImageWrapper
         style={{
-          backgroundColor: COLORS.grayscale[200],
+          backgroundColor: COLORS.grayscale[400],
         }}
       >
         <Image

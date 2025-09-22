@@ -16,15 +16,15 @@ const XWithCircleIcon = ({
         d="M8 16L16 8"
         stroke="white"
         strokeWidth="1.3"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M16 16L8 8"
         stroke="white"
         strokeWidth="1.3"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

@@ -2,7 +2,6 @@
 import styled from "@emotion/styled";
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
-import { ARTIST_DATA } from "@/components/view/SearchMainView";
 import { LeftChevronIcon } from "@/components/svg";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TYPOGRAPHY } from "@/styles/typography";
@@ -13,73 +12,6 @@ import { useUser } from "@/contexts/UserContext";
 import { useQuery } from "@tanstack/react-query";
 import customAxios from "@/lib/axios";
 import { ArtistDetailResponseType } from "@/type";
-
-const AI_RECOMMENDED_ARTISTS: ArtistType[] = [
-  {
-    id: 0,
-    name: "김아티스트",
-    profileImage: "/images/square-profiles/men/man-1.png",
-    thumbnailImage: "/images/square-profiles/men/man-1.png",
-    description: "안녕하세요. 저는 음악을 좋아하는 김아티스트입니다.",
-    followersCount: 1200,
-    isFollowing: false,
-    level: 5,
-    score: 1500,
-    tags: ["팝", "재즈", "클래식"],
-    height: 180,
-    weight: 75,
-    birthDate: "1990-01-01",
-    specialty: ["보컬", "작곡"],
-  },
-  {
-    id: 1,
-    name: "이뮤지션",
-    profileImage: "/images/square-profiles/women/woman-1.png",
-    thumbnailImage: "/images/square-profiles/woman-1.png",
-    description: "안녕하세요. 저는 음악을 좋아하는 이뮤지션입니다.",
-    followersCount: 980,
-    isFollowing: true,
-    level: 4,
-    score: 1200,
-    tags: ["록", "인디"],
-    height: 165,
-    weight: 50,
-    birthDate: "1995-03-22",
-    specialty: ["배우", "보컬"],
-  },
-  {
-    id: 2,
-    name: "박댄서",
-    profileImage: "/images/square-profiles/women/woman-2.png",
-    thumbnailImage: "/images/square-profiles/woman-2.png",
-    description: "안녕하세요. 저는 춤을 좋아하는 박댄서입니다.",
-    followersCount: 1500,
-    isFollowing: false,
-    level: 6,
-    score: 1800,
-    tags: ["힙합", "팝"],
-    height: 175,
-    weight: 65,
-    birthDate: "1992-05-15",
-    specialty: ["댄서"],
-  },
-  {
-    id: 3,
-    name: "최성악가",
-    profileImage: "/images/square-profiles/women/woman-3.png",
-    thumbnailImage: "/images/square-profiles/woman-3.png",
-    description: "안녕하세요. 저는 성악을 전공한 최성악가입니다.",
-    followersCount: 800,
-    isFollowing: false,
-    level: 3,
-    score: 900,
-    tags: ["클래식", "오페라"],
-    height: 170,
-    weight: 55,
-    birthDate: "1988-11-30",
-    specialty: ["성악"],
-  },
-];
 
 const ArtistCard = ({
   artist,
@@ -92,7 +24,6 @@ const ArtistCard = ({
     categoryName: string;
   };
 }) => {
-  const router = useRouter();
   return (
     <ArtistCardContainer>
       <div style={{ position: "relative", width: "140px", height: "140px" }}>
@@ -142,7 +73,6 @@ const ArtistCard = ({
             color: COLORS.grayscale[700],
           }}
         >
-          레벨
           {artist.grade}/ {artist.score}
         </div>
       </div>
@@ -197,7 +127,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   }, [status]);
 
-  if (!data || isLoading) {
+  if (isLoading) {
     return (
       <Container>
         <ShadowHeader>
@@ -207,24 +137,13 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </ShadowHeader>
         <ImageWrapper
           style={{
-            backgroundColor: COLORS.grayscale[200],
+            backgroundColor: COLORS.grayscale[400],
           }}
-        >
-          {data?.image && (
-            <Image
-              src={data.image}
-              alt={data.name}
-              fill
-              sizes="100%"
-              style={{ objectFit: "cover" }}
-              priority
-            />
-          )}
-        </ImageWrapper>
+        ></ImageWrapper>
         <div
           style={{
             width: "100%",
-            height: "100vh",
+            flex: 1,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -236,6 +155,8 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
     );
   }
 
+  console.log("artist data:", data);
+
   return (
     <Container>
       <ShadowHeader>
@@ -245,7 +166,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </ShadowHeader>
       <ImageWrapper
         style={{
-          backgroundColor: COLORS.grayscale[200],
+          backgroundColor: COLORS.grayscale[400],
         }}
       >
         {data?.image && (
@@ -276,8 +197,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             color: COLORS.grayscale[1300],
           }}
         >
-          레벨
-          {data?.grade} | {data?.score}
+          {data?.grade || "Unknown"} | {data?.score}
         </div>
         <div
           style={{
@@ -288,22 +208,28 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           <div
-            style={{ cursor: data.instagramLink ? "pointer" : "not-allowed" }}
-            onClick={() => {
-              if (!data.instagramLink) return;
-              router.push(data.instagramLink || "");
+            style={{
+              cursor:
+                data.youtubeLink !== "https://" ? "pointer" : "not-allowed",
             }}
-          >
-            <InstagramIcon />
-          </div>
-          <div
-            style={{ cursor: data.youtubeLink ? "pointer" : "not-allowed" }}
             onClick={() => {
-              if (!data.youtubeLink) return;
+              if (data.youtubeLink === "https://") return;
               router.push(data.youtubeLink || "");
             }}
           >
             <YoutubeIcon />
+          </div>
+          <div
+            style={{
+              cursor:
+                data.instagramLink !== "https://" ? "pointer" : "not-allowed",
+            }}
+            onClick={() => {
+              if (data.instagramLink === "https://") return;
+              router.push(data.instagramLink || "");
+            }}
+          >
+            <InstagramIcon />
           </div>
         </div>
       </div>
@@ -438,9 +364,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                           ...TYPOGRAPHY.body2["regular"],
                         }}
                       >
-                        Instagram
+                        Youtube
                       </div>
-                      <InstagramIcon width={20} height={20} />
+                      <YoutubeIcon width={20} height={20} />
                     </FlexRow>
                   </SnsCard>
                 );
@@ -480,9 +406,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                           ...TYPOGRAPHY.body2["regular"],
                         }}
                       >
-                        Youtube
+                        Instagram
                       </div>
-                      <YoutubeIcon width={20} height={20} />
+                      <InstagramIcon width={20} height={20} />
                     </FlexRow>
                   </SnsCard>
                 );

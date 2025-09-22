@@ -14,6 +14,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User>({
     id: 0,
+    // 1이 artist, 2가 project
     category: 0,
     email: "",
     name: "",

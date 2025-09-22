@@ -1,10 +1,9 @@
 "use client";
 import styled from "@emotion/styled";
-import { use, useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { ARTIST_DATA } from "@/components/view/SearchMainView";
 import { LeftChevronIcon } from "@/components/svg";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { TYPOGRAPHY } from "@/styles/typography";
 import { COLORS } from "@/styles/color";
 import InstagramIcon from "@/components/svg/InstagramIcon";
@@ -14,191 +13,115 @@ import EditorIcon from "@/components/svg/EditorIcon";
 import { useQuery } from "@tanstack/react-query";
 import customAxios from "@/lib/axios";
 import GNB from "@/components/layout/GNB";
+import { ArtistDetailResponseType, ProjectResponseType } from "@/type";
+import { useAuth } from "@/contexts/AuthContext";
 
-const AI_RECOMMENDED_ARTISTS: ArtistType[] = [
-  {
-    id: 0,
-    name: "김아티스트",
-    profileImage: "/images/square-profiles/men/man-1.png",
-    thumbnailImage: "/images/square-profiles/men/man-1.png",
-    description: "안녕하세요. 저는 음악을 좋아하는 김아티스트입니다.",
-    followersCount: 1200,
-    isFollowing: false,
-    level: 5,
-    score: 1500,
-    tags: ["팝", "재즈", "클래식"],
-    height: 180,
-    weight: 75,
-    birthDate: "1990-01-01",
-    specialty: ["보컬", "작곡"],
-  },
-  {
-    id: 1,
-    name: "이뮤지션",
-    profileImage: "/images/square-profiles/women/woman-1.png",
-    thumbnailImage: "/images/square-profiles/woman-1.png",
-    description: "안녕하세요. 저는 음악을 좋아하는 이뮤지션입니다.",
-    followersCount: 980,
-    isFollowing: true,
-    level: 4,
-    score: 1200,
-    tags: ["록", "인디"],
-    height: 165,
-    weight: 50,
-    birthDate: "1995-03-22",
-    specialty: ["배우", "보컬"],
-  },
-  {
-    id: 2,
-    name: "박댄서",
-    profileImage: "/images/square-profiles/women/woman-2.png",
-    thumbnailImage: "/images/square-profiles/woman-2.png",
-    description: "안녕하세요. 저는 춤을 좋아하는 박댄서입니다.",
-    followersCount: 1500,
-    isFollowing: false,
-    level: 6,
-    score: 1800,
-    tags: ["힙합", "팝"],
-    height: 175,
-    weight: 65,
-    birthDate: "1992-05-15",
-    specialty: ["댄서"],
-  },
-  {
-    id: 3,
-    name: "최성악가",
-    profileImage: "/images/square-profiles/women/woman-3.png",
-    thumbnailImage: "/images/square-profiles/woman-3.png",
-    description: "안녕하세요. 저는 성악을 전공한 최성악가입니다.",
-    followersCount: 800,
-    isFollowing: false,
-    level: 3,
-    score: 900,
-    tags: ["클래식", "오페라"],
-    height: 170,
-    weight: 55,
-    birthDate: "1988-11-30",
-    specialty: ["성악"],
-  },
-];
-
-const ArtistCard = ({ artist }: { artist: ArtistType }) => {
-  const router = useRouter();
-  return (
-    <ArtistCardContainer
-      onClick={() => router.push(`/search/artist/${artist.id}`)}
-    >
-      <div style={{ position: "relative", width: "140px", height: "140px" }}>
-        <Image
-          src={artist.profileImage}
-          alt={artist.name}
-          fill
-          sizes="100%"
-          style={{ objectFit: "cover" }}
-          priority
-        />
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
-          padding: "0 10px 10px 10px",
-        }}
-      >
-        <div>
-          {artist.tags.slice(0, 1).map((tag, index) => (
-            <span
-              key={index}
-              style={{
-                ...TYPOGRAPHY.caption["medium"],
-                color: COLORS.grayscale[100],
-                backgroundColor: COLORS.primary[500],
-                padding: "2px 6px",
-                marginRight: 4,
-              }}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-        <div
-          style={{
-            ...TYPOGRAPHY.body1["semiBold"],
-          }}
-        >
-          {artist.name}
-        </div>
-        {/* <div style={{ ...TYPOGRAPHY.body2["regular"] }}>
-          팔로워 {artist.followersCount}명
-        </div> */}
-        <div
-          style={{
-            ...TYPOGRAPHY.body2["regular"],
-            color: COLORS.grayscale[700],
-          }}
-        >
-          레벨
-          {artist.level}/ {artist.score}
-        </div>
-      </div>
-    </ArtistCardContainer>
-  );
-};
-
-const ArtistCardContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 13px;
-  cursor: pointer;
-  border: 0.7px solid ${COLORS.grayscale[500]};
-`;
-
-const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const searchParams = useSearchParams();
-  const status = searchParams.get("status");
-  const { id } = use(params);
+const StagePage = () => {
+  const { logout } = useAuth();
   const router = useRouter();
   const { user } = useUser();
   const [open, setOpen] = useState(false);
 
+  console.log("user in stage page:", user);
+
   const [imageOverlayVisible, setImageOverlayVisible] = useState(false);
   const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
 
-  const artist = ARTIST_DATA.find((artist) => artist.id === 0);
+  const { data: myStageData, isLoading: isMyStageLoading } =
+    useQuery<ArtistDetailResponseType>({
+      queryKey: ["myStage"],
+      queryFn: async () => {
+        const response = await customAxios.get(
+          `/api/stage/getMyArtistStage`,
+          {}
+        );
+        if (response.status !== 200) {
+          throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
+        }
 
-  const { data: myStageData, isLoading } = useQuery({
-    queryKey: ["myStage"],
+        console.log("myStageData", response.data);
+
+        return response.data;
+      },
+      staleTime: 5 * 60 * 1000, // 5분
+      enabled: !!user && user.category === 1, // user가 있을 때만 실행
+    });
+
+  // /api/project/getMyOpenProjectList -> 나의 진행중인 프로젝트 목록
+  // /api/project/getMyCloseProjectList -> 나의 마감 프로젝트 목록
+
+  const { data: myOpenProjectData, isLoading: isOpenProjectLoading } = useQuery<
+    ProjectResponseType[]
+  >({
+    queryKey: ["myOpenProjects"],
     queryFn: async () => {
-      const response = await customAxios.get(`/api/stage/getMyArtistStage`, {});
+      const response = await customAxios.get(
+        `/api/project/getMyOpenProjectList`,
+        {}
+      );
       if (response.status !== 200) {
-        throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
+        throw new Error("진행중인 프로젝트 정보를 가져오는 데 실패했습니다.");
       }
-
-      console.log("myStageData", response.data);
-
+      console.log("myOpenProjectData", response.data);
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5분
+    enabled: !!user && user.category === 2, // user가 있을 때만 실행
   });
 
-  useEffect(() => {
-    if (status === "connected") {
-      setOpen(true);
-    }
-  }, [status]);
+  const { data: myCloseProjectData, isLoading: isCloseProjectLoading } =
+    useQuery<ProjectResponseType[]>({
+      queryKey: ["myCloseProjects"],
+      queryFn: async () => {
+        const response = await customAxios.get(
+          `/api/project/getMyCloseProjectList`,
+          {}
+        );
+        if (response.status !== 200) {
+          throw new Error("마감 프로젝트 정보를 가져오는 데 실패했습니다.");
+        }
+        console.log("myCloseProjectData", response.data);
+        return response.data;
+      },
+      staleTime: 5 * 60 * 1000, // 5분
+      enabled: !!user && user.category === 2, // user가 있을 때만 실행
+    });
 
-  if (!artist) {
-    return <div>Artist not found</div>;
-  }
-
-  if (false) {
-    return <div>Loading...</div>;
-  }
-
+  // artist가 내 프로필일 때
   if (user.category === 1) {
+    if (isMyStageLoading) {
+      return (
+        <Container>
+          <ShadowHeader>
+            {/* <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
+            <LeftChevronIcon fill="#FFFFFF" />
+          </div> */}
+            <div
+              onClick={() => router.push("/stage/edit/profile")}
+              style={{ cursor: "pointer" }}
+            >
+              <EditorIcon />
+            </div>
+          </ShadowHeader>
+          <ImageWrapper
+            style={{
+              backgroundColor: COLORS.grayscale[400],
+            }}
+          ></ImageWrapper>
+          <div
+            style={{
+              width: "100%",
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <div style={{ ...TYPOGRAPHY.body1["medium"] }}>Loading...</div>
+          </div>
+        </Container>
+      );
+    }
     return (
       <Container>
         <OuterBox>
@@ -215,17 +138,19 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
           </ShadowHeader>
           <ImageWrapper
             style={{
-              backgroundColor: COLORS.grayscale[200],
+              backgroundColor: COLORS.grayscale[400],
             }}
           >
-            <Image
-              src={artist.profileImage}
-              alt={artist.name}
-              fill
-              sizes="100%"
-              style={{ objectFit: "cover" }}
-              priority
-            />
+            {myStageData?.image && (
+              <Image
+                src={myStageData.image}
+                alt={myStageData.name}
+                fill
+                sizes="100%"
+                style={{ objectFit: "cover" }}
+                priority
+              />
+            )}
           </ImageWrapper>
           <div
             style={{
@@ -244,19 +169,44 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 color: COLORS.grayscale[1300],
               }}
             >
-              레벨
-              {artist.level} | {artist.score}
+              {myStageData?.grade || "Unknown"} | {myStageData?.score || 0}
             </div>
             <div
               style={{
                 ...TYPOGRAPHY.h2["bold"],
               }}
             >
-              {artist.name}
+              {myStageData?.name || ""}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
-              <InstagramIcon />
-              <YoutubeIcon />
+              <div
+                style={{
+                  cursor:
+                    myStageData?.youtubeLink !== "https://"
+                      ? "pointer"
+                      : "not-allowed",
+                }}
+                onClick={() => {
+                  if (myStageData?.youtubeLink === "https://") return;
+                  router.push(myStageData.youtubeLink || "");
+                }}
+              >
+                <YoutubeIcon />
+              </div>
+              <div
+                style={{
+                  cursor:
+                    myStageData?.instagramLink !== "https://"
+                      ? "pointer"
+                      : "not-allowed",
+                }}
+                onClick={() => {
+                  if (myStageData?.instagramLink === "https://") return;
+                  router.push(myStageData.instagramLink || "");
+                }}
+              >
+                <InstagramIcon />
+              </div>
             </div>
           </div>
           <div style={{ padding: "0 16px", width: "100%" }}>
@@ -270,7 +220,11 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               >
                 생년
               </div>
-              <div>{artist.birthDate}</div>
+              <div>
+                {myStageData?.birthDate
+                  ? myStageData.birthDate.slice(0, 10)
+                  : "알 수 없음"}
+              </div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
               <div
@@ -282,7 +236,11 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               >
                 신장
               </div>
-              <div>{artist.height} cm</div>
+              <div>
+                {myStageData?.weight
+                  ? `${myStageData.weight} cm`
+                  : "알 수 없음"}
+              </div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
               <div
@@ -294,7 +252,11 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               >
                 체중
               </div>
-              <div>{artist.weight} kg</div>
+              <div>
+                {myStageData?.weight
+                  ? `${myStageData.weight} kg`
+                  : "알 수 없음"}
+              </div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
               <div
@@ -307,8 +269,8 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 특기
               </div>
               <div>
-                {Array.isArray(artist.specialty)
-                  ? artist.specialty.join(", ")
+                {Array.isArray(myStageData?.specialty)
+                  ? myStageData.specialty.join(", ")
                   : "없음"}
               </div>
             </Flex>
@@ -323,19 +285,21 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 분야
               </div>
               <div style={{ display: "flex", gap: 6 }}>
-                {artist.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      ...TYPOGRAPHY.caption["medium"],
-                      color: COLORS.grayscale[100],
-                      backgroundColor: COLORS.primary[500],
-                      padding: "2px 6px",
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {(myStageData?.genreList || []).length === 0 && "없음"}
+                {(myStageData?.genreList || []).length > 0 &&
+                  myStageData.genreList.map((genre, index) => (
+                    <span
+                      key={index}
+                      style={{
+                        ...TYPOGRAPHY.caption["medium"],
+                        color: COLORS.grayscale[100],
+                        backgroundColor: COLORS.primary[500],
+                        padding: "2px 6px",
+                      }}
+                    >
+                      {genre.genreName}
+                    </span>
+                  ))}
               </div>
             </Flex>
           </div>
@@ -355,82 +319,95 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               </div>
             </Title>
             <HorizontalThemeScrollContainer>
-              <SnsCard
-                onClick={() => {
-                  setImageOverlayVisible(true);
-                }}
-              >
-                <div
-                  style={{
-                    position: "relative",
-                    width: "190px",
-                    height: "210px",
-                  }}
-                >
-                  <Image
-                    src="/images/oblong-profiles/men/man-1.png"
-                    alt="Instagram"
-                    fill
-                    sizes="100%"
-                    style={{ objectFit: "cover" }}
-                    priority
-                  />
-                </div>
-                <FlexRow
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div
-                    style={{
-                      ...TYPOGRAPHY.body2["regular"],
-                    }}
-                  >
-                    Instagram
-                  </div>
-                  <InstagramIcon width={20} height={20} />
-                </FlexRow>
-              </SnsCard>
-              <SnsCard
-                onClick={() => {
-                  setVideoOverlayVisible(true);
-                }}
-              >
-                <div
-                  style={{
-                    position: "relative",
-                    width: "190px",
-                    height: "210px",
-                  }}
-                >
-                  <Image
-                    src="/images/oblong-profiles/men/man-1.png"
-                    alt="Instagram"
-                    fill
-                    sizes="100%"
-                    style={{ objectFit: "cover" }}
-                    priority
-                  />
-                </div>
-                <FlexRow
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div
-                    style={{
-                      ...TYPOGRAPHY.body2["regular"],
-                    }}
-                  >
-                    Youtube
-                  </div>
-                  <YoutubeIcon width={20} height={20} />
-                </FlexRow>
-              </SnsCard>
+              {(myStageData?.snsList || []).length === 0 && "없음"}
+              {(myStageData?.snsList || []).length > 0 &&
+                myStageData.snsList.map((sns) => {
+                  if (sns.type === "1") {
+                    return (
+                      <SnsCard
+                        key={sns.id}
+                        onClick={() => {
+                          setImageOverlayVisible(true);
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "190px",
+                            height: "210px",
+                          }}
+                        >
+                          <Image
+                            src="/images/oblong-profiles/men/man-1.png"
+                            alt="Instagram"
+                            fill
+                            sizes="100%"
+                            style={{ objectFit: "cover" }}
+                            priority
+                          />
+                        </div>
+                        <FlexRow
+                          style={{
+                            width: "100%",
+                            padding: "10px 14px",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div
+                            style={{
+                              ...TYPOGRAPHY.body2["regular"],
+                            }}
+                          >
+                            Youtube
+                          </div>
+                          <YoutubeIcon width={20} height={20} />
+                        </FlexRow>
+                      </SnsCard>
+                    );
+                  } else {
+                    return (
+                      <SnsCard
+                        key={sns.id}
+                        onClick={() => {
+                          setVideoOverlayVisible(true);
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "190px",
+                            height: "210px",
+                          }}
+                        >
+                          <Image
+                            src="/images/oblong-profiles/men/man-1.png"
+                            alt="Instagram"
+                            fill
+                            sizes="100%"
+                            style={{ objectFit: "cover" }}
+                            priority
+                          />
+                        </div>
+                        <FlexRow
+                          style={{
+                            width: "100%",
+                            padding: "10px 14px",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <div
+                            style={{
+                              ...TYPOGRAPHY.body2["regular"],
+                            }}
+                          >
+                            Instagram
+                          </div>
+                          <InstagramIcon width={20} height={20} />
+                        </FlexRow>
+                      </SnsCard>
+                    );
+                  }
+                })}
             </HorizontalThemeScrollContainer>
           </div>
           <Divider />
@@ -449,111 +426,45 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
                 gap: 8,
               }}
             >
-              <PortfolioBox>
-                <FlexRow style={{ gap: 6 }}>
-                  <div
-                    style={{
-                      ...TYPOGRAPHY.caption["medium"],
-                      color: COLORS.grayscale[100],
-                      backgroundColor: COLORS.grayscale[1300],
-                      padding: "2px 6px",
-                    }}
-                  >
-                    연극
-                  </div>
-                  <div
-                    style={{
-                      ...TYPOGRAPHY.body2["semiBold"],
-                    }}
-                  >
-                    공연명
-                  </div>
-                </FlexRow>
-                <FlexRow
-                  style={{
-                    ...TYPOGRAPHY.body2["regular"],
-                  }}
-                >
-                  2023.09.21 ~ 2023.09.21
-                </FlexRow>
-                <FlexRow
-                  style={{
-                    ...TYPOGRAPHY.body2["regular"],
-                  }}
-                >
-                  공연장명: 대학로 아트홀
-                </FlexRow>
-              </PortfolioBox>
-              <PortfolioBox>
-                <FlexRow style={{ gap: 6 }}>
-                  <div
-                    style={{
-                      ...TYPOGRAPHY.caption["medium"],
-                      color: COLORS.grayscale[100],
-                      backgroundColor: COLORS.grayscale[1300],
-                      padding: "2px 6px",
-                    }}
-                  >
-                    연극
-                  </div>
-                  <div
-                    style={{
-                      ...TYPOGRAPHY.body2["semiBold"],
-                    }}
-                  >
-                    공연명
-                  </div>
-                </FlexRow>
-                <FlexRow
-                  style={{
-                    ...TYPOGRAPHY.body2["regular"],
-                  }}
-                >
-                  2023.09.21 ~ 2023.09.21
-                </FlexRow>
-                <FlexRow
-                  style={{
-                    ...TYPOGRAPHY.body2["regular"],
-                  }}
-                >
-                  공연장명: 대학로 아트홀
-                </FlexRow>
-              </PortfolioBox>
-              <PortfolioBox>
-                <FlexRow style={{ gap: 6 }}>
-                  <div
-                    style={{
-                      ...TYPOGRAPHY.caption["medium"],
-                      color: COLORS.grayscale[100],
-                      backgroundColor: COLORS.grayscale[1300],
-                      padding: "2px 6px",
-                    }}
-                  >
-                    연극
-                  </div>
-                  <div
-                    style={{
-                      ...TYPOGRAPHY.body2["semiBold"],
-                    }}
-                  >
-                    공연명
-                  </div>
-                </FlexRow>
-                <FlexRow
-                  style={{
-                    ...TYPOGRAPHY.body2["regular"],
-                  }}
-                >
-                  2023.09.21 ~ 2023.09.21
-                </FlexRow>
-                <FlexRow
-                  style={{
-                    ...TYPOGRAPHY.body2["regular"],
-                  }}
-                >
-                  공연장명: 대학로 아트홀
-                </FlexRow>
-              </PortfolioBox>
+              {(myStageData?.portfolioList || []).length === 0 && "없음"}
+              {(myStageData?.portfolioList || []).length > 0 &&
+                myStageData.portfolioList.map((portfolio) => (
+                  <PortfolioBox key={portfolio.id}>
+                    <FlexRow style={{ gap: 6 }}>
+                      <div
+                        style={{
+                          ...TYPOGRAPHY.caption["medium"],
+                          color: COLORS.grayscale[100],
+                          backgroundColor: COLORS.grayscale[1300],
+                          padding: "2px 6px",
+                        }}
+                      >
+                        연극
+                      </div>
+                      <div
+                        style={{
+                          ...TYPOGRAPHY.body2["semiBold"],
+                        }}
+                      >
+                        공연명
+                      </div>
+                    </FlexRow>
+                    <FlexRow
+                      style={{
+                        ...TYPOGRAPHY.body2["regular"],
+                      }}
+                    >
+                      2023.09.21 ~ 2023.09.21
+                    </FlexRow>
+                    <FlexRow
+                      style={{
+                        ...TYPOGRAPHY.body2["regular"],
+                      }}
+                    >
+                      공연장명: 대학로 아트홀
+                    </FlexRow>
+                  </PortfolioBox>
+                ))}
             </div>
           </div>
           {imageOverlayVisible && (
@@ -606,11 +517,89 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               </div>
             </VideoOverlay>
           )}
+          <ButtonBox>
+            <Button
+              onClick={() => {
+                setOpen(true);
+              }}
+            >
+              로그아웃
+            </Button>
+          </ButtonBox>
         </OuterBox>
         <GNB />
+        <Modal style={{ display: open ? "flex" : "none" }}>
+          <MessageBox>
+            <div>정말 로그아웃 하시겠어요?</div>
+            <div style={{ display: "flex", gap: 8, width: "100%" }}>
+              <MessageBoxButton
+                style={{
+                  ...TYPOGRAPHY.body1.medium,
+                  backgroundColor: COLORS.grayscale[500],
+                  color: COLORS.grayscale[1300],
+                }}
+                onClick={() => {
+                  setOpen(false);
+                }}
+              >
+                취소
+              </MessageBoxButton>
+              <MessageBoxButton
+                style={{
+                  ...TYPOGRAPHY.body1.medium,
+                  backgroundColor: COLORS.grayscale[1100],
+                  color: COLORS.grayscale[100],
+                }}
+                onClick={() => {
+                  logout();
+                  setOpen(false);
+                  window.location.href = "/";
+                }}
+              >
+                확인
+              </MessageBoxButton>
+            </div>
+          </MessageBox>
+        </Modal>
       </Container>
     );
   }
+
+  if (isOpenProjectLoading || isCloseProjectLoading) {
+    return (
+      <Container>
+        <ShadowHeader>
+          {/* <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
+            <LeftChevronIcon fill="#FFFFFF" />
+          </div> */}
+          <div
+            onClick={() => router.push("/stage/edit/profile")}
+            style={{ cursor: "pointer" }}
+          >
+            <EditorIcon />
+          </div>
+        </ShadowHeader>
+        <ImageWrapper
+          style={{
+            backgroundColor: COLORS.grayscale[400],
+          }}
+        ></ImageWrapper>
+        <div
+          style={{
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ ...TYPOGRAPHY.body1["medium"] }}>Loading...</div>
+        </div>
+      </Container>
+    );
+  }
+
+  // company가 내 프로필일 때 (user.category === 2)
 
   return (
     <Container>
@@ -628,12 +617,12 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
         </ShadowHeader>
         <ImageWrapper
           style={{
-            backgroundColor: COLORS.grayscale[200],
+            backgroundColor: COLORS.grayscale[400],
           }}
         >
           <Image
             src={"/images/square-profiles/thumbnail/cd-bg.png"}
-            alt={artist.name}
+            alt={user.profileImage || user.thumbnailImage}
             fill
             sizes="100%"
             style={{ objectFit: "cover" }}
@@ -656,15 +645,14 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               color: COLORS.grayscale[1300],
             }}
           >
-            소속사명
-            {artist.level}
+            {"소속사명"}
           </div>
           <div
             style={{
               ...TYPOGRAPHY.h2["bold"],
             }}
           >
-            {artist.name}
+            {user.name}
           </div>
         </div>
         <Divider />
@@ -683,111 +671,48 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               gap: 8,
             }}
           >
-            <PortfolioBox onClick={() => router.push("/search/project/0")}>
-              <FlexRow style={{ gap: 6 }}>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.caption["medium"],
-                    color: COLORS.grayscale[100],
-                    backgroundColor: COLORS.grayscale[1300],
-                    padding: "2px 6px",
-                  }}
+            {(myOpenProjectData || []).length === 0 && "없음"}
+            {(myOpenProjectData || []).length > 0 &&
+              myOpenProjectData.map((project, index) => (
+                <PortfolioBox
+                  key={index}
+                  onClick={() => router.push("/search/project/0")}
                 >
-                  연극
-                </div>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.body2["semiBold"],
-                  }}
-                >
-                  공연명
-                </div>
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                2023.09.21 ~ 2023.09.21
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                공연장명: 대학로 아트홀
-              </FlexRow>
-            </PortfolioBox>
-            <PortfolioBox onClick={() => router.push("/search/project/1")}>
-              <FlexRow style={{ gap: 6 }}>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.caption["medium"],
-                    color: COLORS.grayscale[100],
-                    backgroundColor: COLORS.grayscale[1300],
-                    padding: "2px 6px",
-                  }}
-                >
-                  연극
-                </div>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.body2["semiBold"],
-                  }}
-                >
-                  공연명
-                </div>
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                2023.09.21 ~ 2023.09.21
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                공연장명: 대학로 아트홀
-              </FlexRow>
-            </PortfolioBox>
-            <PortfolioBox onClick={() => router.push("/search/project/2")}>
-              <FlexRow style={{ gap: 6 }}>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.caption["medium"],
-                    color: COLORS.grayscale[100],
-                    backgroundColor: COLORS.grayscale[1300],
-                    padding: "2px 6px",
-                  }}
-                >
-                  연극
-                </div>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.body2["semiBold"],
-                  }}
-                >
-                  공연명
-                </div>
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                2023.09.21 ~ 2023.09.21
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                공연장명: 대학로 아트홀
-              </FlexRow>
-            </PortfolioBox>
+                  <FlexRow style={{ gap: 6 }}>
+                    <div
+                      style={{
+                        ...TYPOGRAPHY.caption["medium"],
+                        color: COLORS.grayscale[100],
+                        backgroundColor: COLORS.grayscale[1300],
+                        padding: "2px 6px",
+                      }}
+                    >
+                      연극
+                    </div>
+                    <div
+                      style={{
+                        ...TYPOGRAPHY.body2["semiBold"],
+                      }}
+                    >
+                      공연명
+                    </div>
+                  </FlexRow>
+                  <FlexRow
+                    style={{
+                      ...TYPOGRAPHY.body2["regular"],
+                    }}
+                  >
+                    2023.09.21 ~ 2023.09.21
+                  </FlexRow>
+                  <FlexRow
+                    style={{
+                      ...TYPOGRAPHY.body2["regular"],
+                    }}
+                  >
+                    공연장명: 대학로 아트홀
+                  </FlexRow>
+                </PortfolioBox>
+              ))}
           </div>
         </div>
         <Divider />
@@ -806,115 +731,94 @@ const StagePage = ({ params }: { params: Promise<{ id: string }> }) => {
               gap: 8,
             }}
           >
-            <PortfolioBox onClick={() => router.push("/search/project/0")}>
-              <FlexRow style={{ gap: 6 }}>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.caption["medium"],
-                    color: COLORS.grayscale[100],
-                    backgroundColor: COLORS.grayscale[1300],
-                    padding: "2px 6px",
-                  }}
+            {(myCloseProjectData || []).length === 0 && "없음"}
+            {(myCloseProjectData || []).length > 0 &&
+              myCloseProjectData.map((project, index) => (
+                <PortfolioBox
+                  key={index}
+                  onClick={() => router.push("/search/project/0")}
                 >
-                  연극
-                </div>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.body2["semiBold"],
-                  }}
-                >
-                  공연명
-                </div>
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                2023.09.21 ~ 2023.09.21
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                공연장명: 대학로 아트홀
-              </FlexRow>
-            </PortfolioBox>
-            <PortfolioBox onClick={() => router.push("/search/project/1")}>
-              <FlexRow style={{ gap: 6 }}>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.caption["medium"],
-                    color: COLORS.grayscale[100],
-                    backgroundColor: COLORS.grayscale[1300],
-                    padding: "2px 6px",
-                  }}
-                >
-                  연극
-                </div>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.body2["semiBold"],
-                  }}
-                >
-                  공연명
-                </div>
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                2023.09.21 ~ 2023.09.21
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                공연장명: 대학로 아트홀
-              </FlexRow>
-            </PortfolioBox>
-            <PortfolioBox onClick={() => router.push("/search/project/2")}>
-              <FlexRow style={{ gap: 6 }}>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.caption["medium"],
-                    color: COLORS.grayscale[100],
-                    backgroundColor: COLORS.grayscale[1300],
-                    padding: "2px 6px",
-                  }}
-                >
-                  연극
-                </div>
-                <div
-                  style={{
-                    ...TYPOGRAPHY.body2["semiBold"],
-                  }}
-                >
-                  공연명
-                </div>
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                2023.09.21 ~ 2023.09.21
-              </FlexRow>
-              <FlexRow
-                style={{
-                  ...TYPOGRAPHY.body2["regular"],
-                }}
-              >
-                공연장명: 대학로 아트홀
-              </FlexRow>
-            </PortfolioBox>
+                  <FlexRow style={{ gap: 6 }}>
+                    <div
+                      style={{
+                        ...TYPOGRAPHY.caption["medium"],
+                        color: COLORS.grayscale[100],
+                        backgroundColor: COLORS.grayscale[1300],
+                        padding: "2px 6px",
+                      }}
+                    >
+                      연극
+                    </div>
+                    <div
+                      style={{
+                        ...TYPOGRAPHY.body2["semiBold"],
+                      }}
+                    >
+                      공연명
+                    </div>
+                  </FlexRow>
+                  <FlexRow
+                    style={{
+                      ...TYPOGRAPHY.body2["regular"],
+                    }}
+                  >
+                    2023.09.21 ~ 2023.09.21
+                  </FlexRow>
+                  <FlexRow
+                    style={{
+                      ...TYPOGRAPHY.body2["regular"],
+                    }}
+                  >
+                    공연장명: 대학로 아트홀
+                  </FlexRow>
+                </PortfolioBox>
+              ))}
           </div>
         </div>
+        <ButtonBox>
+          <Button
+            onClick={() => {
+              setOpen(true);
+            }}
+          >
+            로그아웃
+          </Button>
+        </ButtonBox>
       </OuterBox>
       <GNB />
+      <Modal style={{ display: open ? "flex" : "none" }}>
+        <MessageBox>
+          <div>정말 로그아웃 하시겠어요?</div>
+          <div style={{ display: "flex", gap: 8, width: "100%" }}>
+            <MessageBoxButton
+              style={{
+                ...TYPOGRAPHY.body1.medium,
+                backgroundColor: COLORS.grayscale[500],
+                color: COLORS.grayscale[1300],
+              }}
+              onClick={() => {
+                setOpen(false);
+              }}
+            >
+              취소
+            </MessageBoxButton>
+            <MessageBoxButton
+              style={{
+                ...TYPOGRAPHY.body1.medium,
+                backgroundColor: COLORS.grayscale[1100],
+                color: COLORS.grayscale[100],
+              }}
+              onClick={() => {
+                logout();
+                setOpen(false);
+                window.location.href = "/";
+              }}
+            >
+              확인
+            </MessageBoxButton>
+          </div>
+        </MessageBox>
+      </Modal>
     </Container>
   );
 };
@@ -987,6 +891,7 @@ const ButtonBox = styled.div`
   display: flex;
   justify-content: space-between;
   gap: 12px;
+  padding-top: 24px;
   padding-left: 16px;
   padding-right: 16px;
   margin-bottom: 20px;
@@ -1097,6 +1002,20 @@ const VideoOverlay = styled.div`
   z-index: 20;
 `;
 
+const OuterBox = styled.div`
+  flex: 1;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  scrollbar-width: none;
+  -ms-overflow-style: none; /* IE and Edge */
+  padding-bottom: 120px;
+`;
+
 const Modal = styled.div`
   position: fixed;
   top: 0;
@@ -1115,13 +1034,13 @@ const MessageBox = styled.div`
   width: 324px;
   background-color: white;
   color: ${COLORS.grayscale[1300]};
-  padding: 18px;
+  padding: 32px 18px 18px 18px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  gap: 16px;
+  gap: 24px;
 `;
 
 const MessageBoxButton = styled.div`
@@ -1133,18 +1052,4 @@ const MessageBoxButton = styled.div`
   align-items: center;
   padding: 12px 16px;
   cursor: pointer;
-`;
-
-const OuterBox = styled.div`
-  flex: 1;
-  width: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  scrollbar-width: none;
-  -ms-overflow-style: none; /* IE and Edge */
-  padding-bottom: 120px;
 `;

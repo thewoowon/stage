@@ -345,8 +345,7 @@ const ArtistCard = ({ artist }: { artist: ArtistResponseType }) => {
             color: COLORS.grayscale[700],
           }}
         >
-          레벨
-          {artist.level}/ {artist.finalScore || 0}
+          {artist.level || "Unknown"} / {artist.finalScore || 0}
         </div>
       </div>
     </ArtistCardContainer>

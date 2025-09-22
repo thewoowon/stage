@@ -12,6 +12,9 @@ import YoutubeIcon from "@/components/svg/YoutubeIcon";
 import { useUser } from "@/contexts/UserContext";
 import PlusIcon from "@/components/svg/PlusIcon";
 import DownChevronIcon from "@/components/svg/DownChevronIcon";
+import customAxios from "@/lib/axios";
+import { useQuery } from "@tanstack/react-query";
+import { SNSResponseType } from "@/type";
 
 const SNS_OPTIONS = ["최신순", "인기순", "과거순"];
 
@@ -71,32 +74,37 @@ const ContextMenuItem = styled.div`
   }
 `;
 
-const SnsEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const searchParams = useSearchParams();
-  const status = searchParams.get("status");
+const SnsEditPage = () => {
   const router = useRouter();
   const { user } = useUser();
-  const [text, setText] = useState("");
 
   // 동적으로
-  const [snsSettings, setSnsSettins] = useState<
-    {
-      projectName: string;
-      link: string;
-      type: "instagram" | "youtube";
-    }[]
-  >([
-    {
-      projectName: "",
-      link: "",
-      type: "instagram",
+  const [snsSettings, setSnsSettins] = useState<SNSResponseType[]>([]);
+
+  // /api/stage/getSns
+  const { data: mySnsData, isLoading: isMySnsLoading } = useQuery<
+    SNSResponseType[]
+  >({
+    queryKey: ["mySns"],
+    queryFn: async () => {
+      const response = await customAxios.get(`/api/stage/getSns`, {});
+      if (response.status !== 200) {
+        throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
+      }
+
+      console.log("myStageData", response.data);
+
+      return response.data;
     },
-    {
-      projectName: "",
-      link: "",
-      type: "youtube",
-    },
-  ]);
+    staleTime: 5 * 60 * 1000, // 5분
+    enabled: !!user && user.category === 1, // user가 있을 때만 실행
+  });
+
+  useEffect(() => {
+    if (mySnsData && mySnsData.length > 0) {
+      setSnsSettins(mySnsData);
+    }
+  }, [mySnsData]);
 
   return (
     <Container>
@@ -111,7 +119,14 @@ const SnsEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
         >
           공식 SNS 편집
         </div>
-        <div>
+        <div
+          onClick={() => {
+            const newSettings = [...snsSettings];
+            newSettings.push({ id: 0, type: "instagram", title: "", url: "" });
+            setSnsSettins(newSettings);
+          }}
+          style={{ cursor: "pointer" }}
+        >
           <PlusIcon />
         </div>
       </ShadowHeader>
@@ -150,10 +165,10 @@ const SnsEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   paddingLeft: "10px",
                 }}
                 placeholder="프로젝트명을 입력해주세요."
-                value={sns.projectName}
+                value={sns.title}
                 onChange={(e) => {
                   const newSettings = [...snsSettings];
-                  newSettings[index].projectName = e.target.value;
+                  newSettings[index].title = e.target.value;
                   setSnsSettins(newSettings);
                 }}
               />
@@ -209,10 +224,10 @@ const SnsEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     paddingLeft: "10px",
                   }}
                   placeholder="게시물 링크를 입력해주세요."
-                  value={sns.link}
+                  value={sns.url}
                   onChange={(e) => {
                     const newSettings = [...snsSettings];
-                    newSettings[index].link = e.target.value;
+                    newSettings[index].url = e.target.value;
                     setSnsSettins(newSettings);
                   }}
                 />

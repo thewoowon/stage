@@ -1,68 +1,372 @@
 "use client";
 import styled from "@emotion/styled";
-import { use, useEffect, useState } from "react";
 import Image from "next/image";
-import { ARTIST_DATA } from "@/components/view/SearchMainView";
-import { LeftChevronIcon } from "@/components/svg";
-import { useRouter, useSearchParams } from "next/navigation";
+import { LeftChevronIcon, XIcon } from "@/components/svg";
+import { useRouter } from "next/navigation";
 import { TYPOGRAPHY } from "@/styles/typography";
 import { COLORS } from "@/styles/color";
-import InstagramIcon from "@/components/svg/InstagramIcon";
-import YoutubeIcon from "@/components/svg/YoutubeIcon";
 import { useUser } from "@/contexts/UserContext";
 import EditorIcon from "@/components/svg/EditorIcon";
+import CameraIcon from "@/components/svg/CameraIcon";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import customAxios from "@/lib/axios";
+import { ArtistDetailResponseType } from "@/type";
+import { useEffect, useRef, useState } from "react";
+import DownChevronIcon from "@/components/svg/DownChevronIcon";
+import { GENRE_LIST } from "@/constants";
 
-const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const searchParams = useSearchParams();
-  const status = searchParams.get("status");
-  const { id } = use(params);
+const AFFILIATION_OPTIONS = [
+  { value: 1, label: "소속" },
+  { value: 2, label: "무소속" },
+];
+
+const MultiSortOptionsContextMenu = ({
+  open,
+  options,
+  selectedOptions,
+  onSelect,
+  onClose,
+}: {
+  open: boolean;
+  options: { value: number; label: string }[];
+  selectedOptions?: number[] | null;
+  onSelect: (option: number) => void;
+  onClose: () => void;
+}) => {
+  if (!open) return null;
+
+  return (
+    <ContextMenuContainer>
+      {options.length === 0 && (
+        <div style={{ padding: "8px 12px", color: COLORS.grayscale[500] }}>
+          없음
+        </div>
+      )}
+      {options.length > 0 &&
+        options.map((option) => (
+          <ContextMenuItem
+            key={option.value}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(option.value);
+            }}
+            style={{
+              ...TYPOGRAPHY.body2["regular"],
+              backgroundColor: selectedOptions?.includes(option.value)
+                ? COLORS.grayscale[400]
+                : "",
+            }}
+          >
+            {option.label}
+          </ContextMenuItem>
+        ))}
+    </ContextMenuContainer>
+  );
+};
+
+const SortOptionsContextMenu = ({
+  open,
+  options,
+  selectedOption,
+  onSelect,
+  onClose,
+}: {
+  open: boolean;
+  options: { value: string | number; label: string }[];
+  selectedOption?: string | number | null;
+  onSelect: (option: string | number) => void;
+  onClose: () => void;
+}) => {
+  if (!open) return null;
+
+  return (
+    <ContextMenuContainer>
+      {options.length === 0 && (
+        <div style={{ padding: "8px 12px", color: COLORS.grayscale[500] }}>
+          없음
+        </div>
+      )}
+      {options.length > 0 &&
+        options.map((option) => (
+          <ContextMenuItem
+            key={option.value}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(option.value);
+            }}
+            style={{
+              ...TYPOGRAPHY.body2["regular"],
+              backgroundColor:
+                selectedOption === option.value ? COLORS.grayscale[400] : "",
+            }}
+          >
+            {option.label}
+          </ContextMenuItem>
+        ))}
+    </ContextMenuContainer>
+  );
+};
+
+const ContextMenuContainer = styled.div`
+  width: 100%;
+  position: absolute;
+  top: 110%;
+  left: 0;
+  background-color: ${COLORS.grayscale[100]};
+  border: 1px solid ${COLORS.grayscale[500]};
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+`;
+
+const ContextMenuItem = styled.div`
+  padding: 8px 12px;
+  cursor: pointer;
+  &:hover {
+    background-color: ${COLORS.grayscale[400]};
+  }
+`;
+
+const ProfileEditPage = () => {
   const router = useRouter();
   const { user } = useUser();
-  const [open, setOpen] = useState(false);
-  const [artist, setArtist] = useState<ArtistType>({
+  console.log("user", user);
+  const [artist, setArtist] = useState<
+    Partial<ArtistDetailResponseType> & {
+      height: string;
+    }
+  >({
     id: 0,
-    name: "김아티스트",
-    profileImage: "/images/square-profiles/men/man-1.png",
-    thumbnailImage: "/images/square-profiles/men/man-1.png",
-    description: "안녕하세요. 저는 음악을 좋아하는 김아티스트입니다.",
-    followersCount: 1200,
-    isFollowing: false,
-    level: 5,
-    score: 1500,
-    tags: ["팝", "재즈", "클래식"],
-    height: 180,
-    weight: 75,
-    birthDate: "1990-01-01",
-    specialty: ["보컬", "작곡"],
-    affiliationType: "무소속",
+    name: "",
+    grade: "",
+    score: "",
+    instagramLink: "",
+    youtubeLink: "",
+    birthDate: "",
+    weight: "",
+    height: "",
+    categoryCode: "",
+    categoryName: "",
+    specialty: "",
+    genreList: [],
+    image: "",
   });
+  const [contextMenuOpen1, setContextMenuOpen1] = useState(false);
+  const [contextMenuOpen2, setContextMenuOpen2] = useState(false);
+  // 소속여부
+  const [affiliation, setAffiliation] = useState<number>(0);
+  const [file, setFile] = useState<File | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [myUploadUrl, setMyUploadUrl] = useState<string | null>(null);
+  const [overLimit, setOverLimit] = useState(false);
+
+  const encodeFileToBase64 = (fileBlob: File) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(fileBlob);
+    return new Promise<void>((resolve) => {
+      reader.onload = () => {
+        setMyUploadUrl(reader.result?.toString() || "");
+        resolve();
+      };
+    });
+  };
+
+  const { data: myStageData, isLoading: isMyStageLoading } =
+    useQuery<ArtistDetailResponseType>({
+      queryKey: ["myStage"],
+      queryFn: async () => {
+        const response = await customAxios.get(
+          `/api/stage/getMyArtistStage`,
+          {}
+        );
+        if (response.status !== 200) {
+          throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
+        }
+
+        console.log("myStageData", response.data);
+
+        return response.data;
+      },
+      staleTime: 5 * 60 * 1000, // 5분
+      enabled: !!user && user.category === 1, // user가 있을 때만 실행
+    });
+
+  const { mutate: mutateArtist } = useMutation({
+    mutationFn: async (
+      artistData: Partial<ArtistDetailResponseType> & { height: string }
+    ) => {
+      const formData = new FormData();
+      formData.append("file", file as File);
+      formData.append(
+        "stageData",
+        JSON.stringify({
+          genreList: artistData.genreList?.map((genre) => genre.genreId) || [],
+          height: artistData.height || "",
+          name: artistData.name || "",
+          instagramLink: artistData.instagramLink || "",
+          birthDate: artistData.birthDate || "",
+          affiliation: AFFILIATION_OPTIONS.find(
+            (option) => option.value === affiliation
+          )?.label,
+          weight: artistData.weight || "",
+          id: artistData.id || 0,
+          youtubeLink: artistData.youtubeLink || "",
+          specialty: artistData.specialty || "",
+        })
+      );
+
+      const response = await customAxios.put(
+        "/api/stage/updateStage",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      if (response.status !== 200) {
+        throw new Error("프로필 업데이트에 실패했습니다.");
+      }
+      return response.data;
+    },
+    onSuccess: (data) => {
+      alert("프로필이 성공적으로 업데이트되었습니다.");
+      router.replace("/stage");
+    },
+    onError: (error) => {
+      console.error(error);
+      alert("프로필 업데이트 중 오류가 발생했습니다. 다시 시도해주세요.");
+    },
+  });
+
+  const handleUpdate = () => {
+    if (user.category === 1) {
+      // 아티스트라면...
+      if (!artist.name || artist.name.trim() === "") {
+        alert("이름을 입력해주세요.");
+        return;
+      }
+      if (!artist.birthDate || artist.birthDate.trim() === "") {
+        alert("생년월일을 입력해주세요.");
+        return;
+      }
+      if (!artist.height || artist.height.trim() === "") {
+        alert("신장을 입력해주세요.");
+        return;
+      }
+      if (!artist.weight || artist.weight.trim() === "") {
+        alert("체중을 입력해주세요.");
+        return;
+      }
+      if (affiliation === 0) {
+        alert("소속여부를 선택해주세요.");
+        return;
+      }
+      if (!artist.specialty || artist.specialty.trim() === "") {
+        alert("특기를 입력해주세요.");
+        return;
+      }
+      if (!artist.genreList || artist.genreList.length === 0) {
+        alert("분야를 선택해주세요.");
+        return;
+      }
+
+      mutateArtist(artist);
+    } else if (user.category === 2) {
+      // 캐스터라면...
+    } else {
+      console.error("알 수 없는 사용자 카테고리:", user.category);
+      return;
+    }
+  };
+
+  useEffect(() => {
+    if (myStageData) {
+      console.log("myStageData useEffect", myStageData);
+      setArtist({
+        id: myStageData.id,
+        name: myStageData.name,
+        grade: myStageData.grade || "",
+        score: myStageData.score || "",
+        instagramLink: myStageData.instagramLink || "",
+        youtubeLink: myStageData.youtubeLink || "",
+        birthDate: myStageData.birthDate || "",
+        weight: myStageData.weight || "",
+        height: "",
+        categoryCode: myStageData.categoryCode || "",
+        categoryName: myStageData.categoryName || "",
+        specialty: myStageData.specialty || "",
+        genreList: myStageData.genreList || [],
+        image: myStageData.image || "",
+      });
+    }
+  }, [myStageData]);
 
   if (user.category === 1) {
     return (
       <Container>
         <ShadowHeader>
-          <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
-            <LeftChevronIcon fill="#FFFFFF" />
+          <div
+            onClick={() => router.back()}
+            style={{ cursor: "pointer", left: 16, position: "absolute" }}
+          >
+            <LeftChevronIcon fill={COLORS.grayscale[100]} />
+          </div>
+          <div
+            style={{
+              ...TYPOGRAPHY.body1["semiBold"],
+              color: COLORS.grayscale[100],
+            }}
+          >
+            프로필 편집
           </div>
         </ShadowHeader>
         <ImageWrapper
           style={{
-            backgroundColor: COLORS.grayscale[200],
+            backgroundColor: COLORS.grayscale[400],
           }}
         >
-          <Image
-            src={artist.profileImage}
-            alt={artist.name}
-            fill
-            sizes="100%"
-            style={{ objectFit: "cover" }}
-            priority
+          <FileInput
+            ref={inputRef}
+            type="file"
+            accept="image/png, image/jpeg, image/jpg"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                // file size check 50MB
+                if (file.size > 50 * 1024 * 1024) {
+                  setOverLimit?.(true);
+                  return;
+                }
+
+                setFile(file);
+
+                await encodeFileToBase64(file);
+              }
+            }}
           />
+          {(artist?.image || myUploadUrl) && (
+            <Image
+              src={artist.image || myUploadUrl}
+              alt={artist.name}
+              fill
+              sizes="100%"
+              style={{ objectFit: "cover" }}
+              priority
+            />
+          )}
+          <CameraIconBox
+            onClick={(e) => {
+              e.stopPropagation();
+              inputRef.current?.click();
+            }}
+          >
+            <CameraIcon />
+          </CameraIconBox>
         </ImageWrapper>
         <div
           style={{
             width: "100%",
-            padding: "30px 16px",
+            padding: "30px 16px 100px 16px",
             display: "flex",
             flexDirection: "column",
             gap: "16px",
@@ -76,7 +380,7 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 marginBottom: "10px",
               }}
             >
-              프로젝트
+              이름
             </div>
             <FlexRow
               style={{
@@ -91,7 +395,7 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   ...TYPOGRAPHY.body2["regular"],
                   paddingLeft: "10px",
                 }}
-                placeholder="프로젝트명을 입력해주세요."
+                placeholder="이름을 입력해주세요"
                 value={artist.name}
                 onChange={(e) => {
                   setArtist({ ...artist, name: e.target.value });
@@ -122,10 +426,10 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   ...TYPOGRAPHY.body2["regular"],
                   paddingLeft: "10px",
                 }}
-                placeholder="인스타그랩을 입력해주세요."
-                value={artist.instagramUrl || ""}
+                placeholder="인스타그랩 링크를 입력해주세요."
+                value={artist.instagramLink || ""}
                 onChange={(e) => {
-                  setArtist({ ...artist, instagramUrl: e.target.value });
+                  setArtist({ ...artist, instagramLink: e.target.value });
                 }}
               />
             </FlexRow>
@@ -153,10 +457,10 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   ...TYPOGRAPHY.body2["regular"],
                   paddingLeft: "10px",
                 }}
-                placeholder="유튜브 채널주소를 입력해주세요."
-                value={artist.youtubeUrl || ""}
+                placeholder="유튜브 채널주소를 입력해주세요"
+                value={artist.youtubeLink || ""}
                 onChange={(e) => {
-                  setArtist({ ...artist, youtubeUrl: e.target.value });
+                  setArtist({ ...artist, youtubeLink: e.target.value });
                 }}
               />
             </FlexRow>
@@ -184,7 +488,7 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   ...TYPOGRAPHY.body2["regular"],
                   paddingLeft: "10px",
                 }}
-                placeholder="프로젝트명을 입력해주세요."
+                placeholder="생년월일을 입력해주세요"
                 value={artist.birthDate}
                 onChange={(e) => {
                   setArtist({ ...artist, birthDate: e.target.value });
@@ -215,10 +519,10 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   ...TYPOGRAPHY.body2["regular"],
                   paddingLeft: "10px",
                 }}
-                placeholder="프로젝트명을 입력해주세요."
-                value={artist.height}
+                placeholder="신장을 입력해주세요"
+                value={artist.height || ""}
                 onChange={(e) => {
-                  setArtist({ ...artist, height: Number(e.target.value) });
+                  setArtist({ ...artist, height: e.target.value });
                 }}
               />
             </FlexRow>
@@ -246,10 +550,10 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   ...TYPOGRAPHY.body2["regular"],
                   paddingLeft: "10px",
                 }}
-                placeholder="체중을 입력해주세요."
+                placeholder="체중을 입력해주세요"
                 value={artist.weight || ""}
                 onChange={(e) => {
-                  setArtist({ ...artist, weight: Number(e.target.value) });
+                  setArtist({ ...artist, weight: e.target.value });
                 }}
               />
             </FlexRow>
@@ -265,22 +569,38 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
               소속여부
             </div>
             <FlexRow
+              onClick={() => {
+                setContextMenuOpen1(!contextMenuOpen1);
+              }}
               style={{
                 height: "44px",
+                justifyContent: "space-between",
                 border: `0.7px solid ${COLORS.grayscale[500]}`,
+                padding: "0px 10px",
                 position: "relative",
                 cursor: "pointer",
               }}
             >
-              <CustomInput
+              <div
                 style={{
                   ...TYPOGRAPHY.body2["regular"],
-                  paddingLeft: "10px",
                 }}
-                placeholder="소속여부를 입력해주세요."
-                value={artist.affiliationType}
-                onChange={(e) => {
-                  setArtist({ ...artist, affiliationType: e.target.value });
+              >
+                {AFFILIATION_OPTIONS.find(
+                  (option) => option.value === affiliation
+                )?.label || "선택"}
+              </div>
+              <DownChevronIcon />
+              <SortOptionsContextMenu
+                open={contextMenuOpen1}
+                options={AFFILIATION_OPTIONS}
+                selectedOption={affiliation}
+                onSelect={(option) => {
+                  setAffiliation(option as number);
+                  setContextMenuOpen1(false);
+                }}
+                onClose={() => {
+                  setContextMenuOpen1(false);
                 }}
               />
             </FlexRow>
@@ -308,12 +628,12 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   ...TYPOGRAPHY.body2["regular"],
                   paddingLeft: "10px",
                 }}
-                placeholder="특기를 입력해주세요."
-                value={artist.specialty?.join(", ") || ""}
+                placeholder="특기를 입력해주세요"
+                value={artist.specialty || ""}
                 onChange={(e) => {
                   setArtist({
                     ...artist,
-                    specialty: e.target.value.split(", "),
+                    specialty: e.target.value,
                   });
                 }}
               />
@@ -330,27 +650,105 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
               분야
             </div>
             <FlexRow
+              onClick={() => {
+                setContextMenuOpen2(!contextMenuOpen2);
+              }}
               style={{
                 height: "44px",
+                justifyContent: "space-between",
                 border: `0.7px solid ${COLORS.grayscale[500]}`,
+                padding: "0px 10px",
                 position: "relative",
                 cursor: "pointer",
               }}
             >
-              <CustomInput
+              <div
                 style={{
                   ...TYPOGRAPHY.body2["regular"],
-                  paddingLeft: "10px",
                 }}
-                placeholder="분야를 입력해주세요."
-                value={artist.tags.join(", ")}
-                onChange={(e) => {
-                  setArtist({ ...artist, name: e.target.value });
+              >
+                {artist.genreList
+                  ? artist.genreList.map((genre) => {
+                      return (
+                        <div
+                          key={genre.genreId}
+                          style={{
+                            color: COLORS.grayscale[100],
+                            backgroundColor: COLORS.grayscale[700],
+                            ...TYPOGRAPHY.caption["medium"],
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                            marginRight: 8,
+                            padding: "1px 6px",
+                          }}
+                        >
+                          {genre.genreName}
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // 선택된 옵션 제거
+                              setArtist({
+                                ...artist,
+                                genreList: artist.genreList?.filter(
+                                  (g) => g.genreId !== genre.genreId
+                                ),
+                              });
+                            }}
+                            style={{ cursor: "pointer" }}
+                          >
+                            <XIcon width={16} height={16} />
+                          </div>
+                        </div>
+                      );
+                    })
+                  : "선택"}
+              </div>
+              <DownChevronIcon />
+              <MultiSortOptionsContextMenu
+                open={contextMenuOpen2}
+                options={GENRE_LIST.map((genre) => ({
+                  value: genre.genreId,
+                  label: genre.genreName,
+                }))}
+                selectedOptions={
+                  artist.genreList?.map((genre) => genre.genreId) || []
+                }
+                onSelect={(option) => {
+                  if (
+                    artist.genreList?.some((genre) => genre.genreId === option)
+                  ) {
+                    // 이미 선택된 옵션이면 제거
+                    setArtist({
+                      ...artist,
+                      genreList: artist.genreList?.filter(
+                        (genre) => genre.genreId !== option
+                      ),
+                    });
+                  } else {
+                    // 선택되지 않은 옵션이면 추가
+                    const selectedGenre = GENRE_LIST.find(
+                      (genre) => genre.genreId === option
+                    );
+                    if (selectedGenre) {
+                      setArtist({
+                        ...artist,
+                        genreList: [...(artist.genreList || []), selectedGenre],
+                      });
+                    }
+                  }
+                  setContextMenuOpen2(false);
+                }}
+                onClose={() => {
+                  setContextMenuOpen2(false);
                 }}
               />
             </FlexRow>
           </div>
         </div>
+        <ButtonBox>
+          <Button onClick={handleUpdate}>저장</Button>
+        </ButtonBox>
       </Container>
     );
   }
@@ -360,26 +758,50 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
       <HeaderWithTitle>
         <div
           onClick={() => router.back()}
-          style={{ cursor: "pointer", left: 16 }}
+          style={{ cursor: "pointer", left: 16, position: "absolute" }}
         >
-          <LeftChevronIcon fill="#111111" />
+          <LeftChevronIcon fill={COLORS.grayscale[100]} />
         </div>
-        <div>프로젝트명</div>
-        <EditorIcon fill="#111111" />
+        <div
+          style={{
+            ...TYPOGRAPHY.body1["semiBold"],
+            color: COLORS.grayscale[100],
+          }}
+        >
+          프로필 편집
+        </div>
       </HeaderWithTitle>
       <ImageWrapper
         style={{
-          backgroundColor: COLORS.grayscale[200],
+          backgroundColor: COLORS.grayscale[400],
         }}
       >
-        <Image
-          src={"/images/square-profiles/thumbnail/cd-bg.png"}
-          alt={artist.name}
-          fill
-          sizes="100%"
-          style={{ objectFit: "cover" }}
-          priority
+        <FileInput
+          ref={inputRef}
+          type="file"
+          accept="image/png, image/jpeg, image/jpg"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              // file size check 50MB
+              if (file.size > 50 * 1024 * 1024) {
+                setOverLimit?.(true);
+                return;
+              }
+
+              setFile(file);
+
+              await encodeFileToBase64(file);
+            }
+          }}
         />
+        <CameraIconBox
+          onClick={() => {
+            alert("준비 중입니다!");
+          }}
+        >
+          <CameraIcon />
+        </CameraIconBox>
       </ImageWrapper>
       <div
         style={{
@@ -398,7 +820,7 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
               marginBottom: "10px",
             }}
           >
-            프로젝트
+            이름
           </div>
           <FlexRow
             style={{
@@ -413,10 +835,10 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 ...TYPOGRAPHY.body2["regular"],
                 paddingLeft: "10px",
               }}
-              placeholder="프로젝트명을 입력해주세요."
-              value={artist.name}
+              placeholder="이름을 입력해주세요"
+              value={user.name}
               onChange={(e) => {
-                setArtist({ ...artist, name: e.target.value });
+                return;
               }}
             />
           </FlexRow>
@@ -454,15 +876,18 @@ const ProfileEditPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 ...TYPOGRAPHY.body2["regular"],
                 paddingLeft: "10px",
               }}
-              placeholder="프로젝트명을 입력해주세요."
-              value={artist.name}
+              placeholder="소속을 입력해주세요"
+              value={""}
               onChange={(e) => {
-                setArtist({ ...artist, name: e.target.value });
+                return;
               }}
             />
           </FlexRow>
         </div>
       </div>
+      <ButtonBox>
+        <Button onClick={handleUpdate}>저장</Button>
+      </ButtonBox>
     </Container>
   );
 };
@@ -497,7 +922,7 @@ const ShadowHeader = styled.div`
   height: 57px;
   z-index: 10;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   padding: 0 16px;
   background: linear-gradient(
@@ -537,8 +962,64 @@ const HeaderWithTitle = styled.div`
   width: 100%;
   height: 57px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 0 16px;
   flex-shrink: 0;
+`;
+
+const CameraIconBox = styled.div`
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 10;
+  background-color: white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+`;
+
+const ButtonBox = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 24px;
+  padding-left: 16px;
+  padding-right: 16px;
+  margin-bottom: 20px;
+  margin-top: 12px;
+`;
+
+const Button = styled.button`
+  z-index: 1;
+  width: 100%;
+  height: 48px;
+  background-color: ${COLORS.primary[500]};
+  color: ${COLORS.grayscale[100]};
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -2%;
+  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${COLORS.primary[600]};
+  }
+
+  &:disabled {
+    background-color: ${COLORS.grayscale[200]};
+    color: ${COLORS.grayscale[500]};
+    cursor: not-allowed;
+  }
+`;
+
+const FileInput = styled.input`
+  display: none;
 `;

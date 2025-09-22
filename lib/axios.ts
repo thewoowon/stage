@@ -20,28 +20,41 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 // === 외부에서 주입할 함수 (AuthContext에서 attach) ===
-let getToken: () => string | null = () => null;
-let setToken: (t: string | null) => void = () => {};
+let getAccessToken: () => string | null = () => null;
+let setAccessToken: (t: string | null) => void = () => {};
+let getRefreshToken: () => string | null = () => null;
+let setRefreshToken: (t: string | null) => void = () => {};
 let logout: () => void = () => {};
 
 export const attachAuthHelpers = (helpers: {
-  getToken: () => string | null;
-  setToken: (t: string | null) => void;
+  getAccessToken: () => string | null;
+  setAccessToken: (t: string | null) => void;
+  getRefreshToken: () => string | null;
+  setRefreshToken: (t: string | null) => void;
   logout: () => void;
 }) => {
-  getToken = helpers.getToken;
-  setToken = helpers.setToken;
+  getAccessToken = helpers.getAccessToken;
+  setAccessToken = helpers.setAccessToken;
+  getRefreshToken = helpers.getRefreshToken;
+  setRefreshToken = helpers.setRefreshToken;
   logout = helpers.logout;
 };
 
 // 요청 인터셉터
 customAxios.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token && !config.url?.startsWith("auth")) {
-    console.log("Attaching token to request:", token);
-    config.headers.Authorization = `Bearer ${1}`;
+  if (config.url?.includes("/api/token/refresh")) {
+    // ✅ refresh 요청일 때 refreshToken 사용
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      config.headers.Authorization = `Bearer ${refreshToken}`;
+    }
+  } else {
+    // ✅ 일반 요청은 accessToken 사용
+    const token = getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
-  config.headers.Authorization = `Bearer ${1}`;
   return config;
 });
 
@@ -52,7 +65,7 @@ customAxios.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      console.log("401 error detected, attempting token refresh");
+      console.log("401 detected, attempting refresh");
       originalRequest._retry = true;
 
       if (isRefreshing) {
@@ -62,20 +75,24 @@ customAxios.interceptors.response.use(
               originalRequest.headers.Authorization = `Bearer ${token}`;
               resolve(customAxios(originalRequest));
             },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            reject: (err: any) => reject(err),
+            reject,
           });
         });
       }
 
       isRefreshing = true;
       try {
-        const res = await customAxios.post("/api/token/refresh"); // refreshToken은 쿠키 자동 전송
-        const newAccessToken = res.data.accessToken;
+        // ✅ refreshToken으로 새 accessToken 요청
+        const res = await customAxios.post("/api/token/refresh");
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+          res.data;
 
         if (!newAccessToken) throw new Error("토큰 재발급 실패");
 
-        setToken(newAccessToken);
+        // 새 토큰 저장
+        setAccessToken(newAccessToken);
+        if (newRefreshToken) setRefreshToken(newRefreshToken);
+
         processQueue(null, newAccessToken);
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
