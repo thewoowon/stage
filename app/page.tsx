@@ -85,6 +85,8 @@ export default function Home() {
     }
   }, [code, getAccessToken]);
 
+  console.log("isAuthenticated:", isAuthenticated, "user:", user);
+
   if (isAuthenticated && user.id !== 0) {
     return <SearchMainView />;
   }
