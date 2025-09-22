@@ -39,24 +39,26 @@ export default function Home() {
 
         setAccessToken(accessToken);
         setRefreshToken(refreshToken); // ✅ localStorage도 자동 반영됨
-
-        const userInfoResponse = await customAxios.get("/api/user/getUserInfo");
-
-        if (userInfoResponse.status === 200) {
-          const userInfo = userInfoResponse.data;
-          console.log("userInfo:", userInfo);
-          if (!userInfo.category) {
-            router.replace("/signup");
-            return;
-          }
-          setIsAuthenticated(true);
-          setUser(userInfo);
-        }
       } else {
         console.error("로그인 실패:", response);
         alert("로그인에 실패했습니다. 다시 시도해주세요.");
+        return router.replace("/");
       }
 
+      const userInfoResponse = await customAxios.get("/api/user/getUserInfo", {
+        headers: { Authorization: `Bearer ${response.headers["accesstoken"]}` },
+      });
+
+      if (userInfoResponse.status === 200) {
+        const userInfo = userInfoResponse.data;
+        console.log("userInfo:", userInfo);
+        if (!userInfo.category) {
+          router.replace("/signup");
+          return;
+        }
+        setIsAuthenticated(true);
+        setUser(userInfo);
+      }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       alert("로그인에 실패했습니다. 다시 시도해주세요.");
