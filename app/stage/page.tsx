@@ -15,14 +15,28 @@ import customAxios from "@/lib/axios";
 import GNB from "@/components/layout/GNB";
 import { ArtistDetailResponseType, ProjectResponseType } from "@/type";
 import { useAuth } from "@/contexts/AuthContext";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import PlusIcon from "@/components/svg/PlusIcon";
+
+const LoaderLottie = () => {
+  return (
+    <DotLottieReact
+      src="/lotties/loading_gray.lottie" // public/anims/hero.lottie
+      autoplay
+      loop
+      style={{
+        width: "32px",
+        height: "32px",
+      }}
+    />
+  );
+};
 
 const StagePage = () => {
   const { logout } = useAuth();
   const router = useRouter();
   const { user } = useUser();
   const [open, setOpen] = useState(false);
-
-  console.log("user in stage page:", user);
 
   const [imageOverlayVisible, setImageOverlayVisible] = useState(false);
   const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
@@ -31,10 +45,7 @@ const StagePage = () => {
     useQuery<ArtistDetailResponseType>({
       queryKey: ["myStage"],
       queryFn: async () => {
-        const response = await customAxios.get(
-          `/api/stage/getMyArtistStage`,
-          {}
-        );
+        const response = await customAxios.get(`/api/stage/getMyArtistStage`);
         if (response.status !== 200) {
           throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
         }
@@ -80,12 +91,16 @@ const StagePage = () => {
         if (response.status !== 200) {
           throw new Error("마감 프로젝트 정보를 가져오는 데 실패했습니다.");
         }
-        console.log("myCloseProjectData", response.data);
+
         return response.data;
       },
       staleTime: 5 * 60 * 1000, // 5분
       enabled: !!user && user.category === 2, // user가 있을 때만 실행
     });
+
+  if (!user) {
+    return <div>로그인이 필요합니다.</div>;
+  }
 
   // artist가 내 프로필일 때
   if (user.category === 1) {
@@ -97,7 +112,9 @@ const StagePage = () => {
             <LeftChevronIcon fill="#FFFFFF" />
           </div> */}
             <div
-              onClick={() => router.push("/stage/edit/profile")}
+              onClick={() => {
+                return;
+              }}
               style={{ cursor: "pointer" }}
             >
               <EditorIcon />
@@ -117,7 +134,7 @@ const StagePage = () => {
               alignItems: "center",
             }}
           >
-            <div style={{ ...TYPOGRAPHY.body1["medium"] }}>Loading...</div>
+            <LoaderLottie />
           </div>
         </Container>
       );
@@ -188,7 +205,8 @@ const StagePage = () => {
                 }}
                 onClick={() => {
                   if (myStageData?.youtubeLink === "https://") return;
-                  router.push(myStageData.youtubeLink || "");
+                  if (!myStageData?.youtubeLink) return;
+                  router.push(myStageData?.youtubeLink);
                 }}
               >
                 <YoutubeIcon />
@@ -202,7 +220,8 @@ const StagePage = () => {
                 }}
                 onClick={() => {
                   if (myStageData?.instagramLink === "https://") return;
-                  router.push(myStageData.instagramLink || "");
+                  if (!myStageData?.instagramLink) return;
+                  router.push(myStageData?.instagramLink);
                 }}
               >
                 <InstagramIcon />
@@ -286,7 +305,8 @@ const StagePage = () => {
               </div>
               <div style={{ display: "flex", gap: 6 }}>
                 {(myStageData?.genreList || []).length === 0 && "없음"}
-                {(myStageData?.genreList || []).length > 0 &&
+                {myStageData &&
+                  (myStageData?.genreList || []).length > 0 &&
                   myStageData.genreList.map((genre, index) => (
                     <span
                       key={index}
@@ -320,9 +340,10 @@ const StagePage = () => {
             </Title>
             <HorizontalThemeScrollContainer>
               {(myStageData?.snsList || []).length === 0 && "없음"}
-              {(myStageData?.snsList || []).length > 0 &&
-                myStageData.snsList.map((sns) => {
-                  if (sns.type === "1") {
+              {myStageData &&
+                (myStageData?.snsList || []).length > 0 &&
+                myStageData?.snsList.map((sns) => {
+                  if (sns.type === "youtube") {
                     return (
                       <SnsCard
                         key={sns.id}
@@ -427,8 +448,9 @@ const StagePage = () => {
               }}
             >
               {(myStageData?.portfolioList || []).length === 0 && "없음"}
-              {(myStageData?.portfolioList || []).length > 0 &&
-                myStageData.portfolioList.map((portfolio) => (
+              {myStageData &&
+                (myStageData?.portfolioList || []).length > 0 &&
+                myStageData?.portfolioList.map((portfolio) => (
                   <PortfolioBox key={portfolio.id}>
                     <FlexRow style={{ gap: 6 }}>
                       <div
@@ -593,7 +615,7 @@ const StagePage = () => {
             alignItems: "center",
           }}
         >
-          <div style={{ ...TYPOGRAPHY.body1["medium"] }}>Loading...</div>
+          <LoaderLottie />
         </div>
       </Container>
     );
@@ -619,16 +641,7 @@ const StagePage = () => {
           style={{
             backgroundColor: COLORS.grayscale[400],
           }}
-        >
-          <Image
-            src={"/images/square-profiles/thumbnail/cd-bg.png"}
-            alt={user.profileImage || user.thumbnailImage}
-            fill
-            sizes="100%"
-            style={{ objectFit: "cover" }}
-            priority
-          />
-        </ImageWrapper>
+        ></ImageWrapper>
         <div
           style={{
             width: "100%",
@@ -645,7 +658,7 @@ const StagePage = () => {
               color: COLORS.grayscale[1300],
             }}
           >
-            {"소속사명"}
+            {"-"}
           </div>
           <div
             style={{
@@ -672,8 +685,9 @@ const StagePage = () => {
             }}
           >
             {(myOpenProjectData || []).length === 0 && "없음"}
-            {(myOpenProjectData || []).length > 0 &&
-              myOpenProjectData.map((project, index) => (
+            {myOpenProjectData &&
+              (myOpenProjectData || []).length > 0 &&
+              myOpenProjectData?.map((project, index) => (
                 <PortfolioBox
                   key={index}
                   onClick={() => router.push("/search/project/0")}
@@ -732,8 +746,9 @@ const StagePage = () => {
             }}
           >
             {(myCloseProjectData || []).length === 0 && "없음"}
-            {(myCloseProjectData || []).length > 0 &&
-              myCloseProjectData.map((project, index) => (
+            {myCloseProjectData &&
+              (myCloseProjectData || []).length > 0 &&
+              myCloseProjectData?.map((project, index) => (
                 <PortfolioBox
                   key={index}
                   onClick={() => router.push("/search/project/0")}
@@ -785,6 +800,28 @@ const StagePage = () => {
           </Button>
         </ButtonBox>
       </OuterBox>
+      <div
+        style={{
+          position: "absolute",
+          bottom: "100px",
+          right: "20px",
+          zIndex: 10,
+          width: "48px",
+          height: "48px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: COLORS.primary[500],
+          borderRadius: "24px",
+          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+          cursor: "pointer",
+        }}
+        onClick={() => {
+          router.push("/stage/create");
+        }}
+      >
+        <PlusIcon fill="white" opacity={1} />
+      </div>
       <GNB />
       <Modal style={{ display: open ? "flex" : "none" }}>
         <MessageBox>

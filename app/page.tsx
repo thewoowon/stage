@@ -37,28 +37,33 @@ export default function Home() {
         const accessToken = response.headers["accesstoken"];
         const refreshToken = response.headers["refreshtoken"];
 
-        setAccessToken(accessToken);
-        setRefreshToken(refreshToken); // ✅ localStorage도 자동 반영됨
+        const userInfoResponse = await customAxios.get(
+          "/api/user/getUserInfo",
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (userInfoResponse.status === 200) {
+          const userInfo = userInfoResponse.data;
+          console.log("userInfo:", userInfo);
+          if (!userInfo.category) {
+            router.replace("/signup");
+            return;
+          }
+          setAccessToken(accessToken);
+          setRefreshToken(refreshToken); // ✅ localStorage도 자동 반영됨
+          setIsAuthenticated(true);
+          setUser(userInfo);
+          router.replace("/");
+        }
       } else {
         console.error("로그인 실패:", response);
-        alert("로그인에 실패했습니다. 다시 시도해주세요.");
         return router.replace("/");
       }
 
-      const userInfoResponse = await customAxios.get("/api/user/getUserInfo", {
-        headers: { Authorization: `Bearer ${response.headers["accesstoken"]}` },
-      });
-
-      if (userInfoResponse.status === 200) {
-        const userInfo = userInfoResponse.data;
-        console.log("userInfo:", userInfo);
-        if (!userInfo.category) {
-          router.replace("/signup");
-          return;
-        }
-        setIsAuthenticated(true);
-        setUser(userInfo);
-      }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       alert("로그인에 실패했습니다. 다시 시도해주세요.");
@@ -85,7 +90,9 @@ export default function Home() {
     }
   }, [code, getAccessToken]);
 
-  console.log("isAuthenticated:", isAuthenticated, "user:", user);
+  useEffect(() => {
+    console.log("Auth/user changed:", isAuthenticated, user);
+  }, [isAuthenticated, user]);
 
   if (isAuthenticated && user) {
     return <SearchMainView />;

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { TYPOGRAPHY } from "@/styles/typography";
 import { COLORS } from "@/styles/color";
 import { useUser } from "@/contexts/UserContext";
-import EditorIcon from "@/components/svg/EditorIcon";
 import CameraIcon from "@/components/svg/CameraIcon";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import customAxios from "@/lib/axios";
@@ -14,6 +13,21 @@ import { ArtistDetailResponseType } from "@/type";
 import { useEffect, useRef, useState } from "react";
 import DownChevronIcon from "@/components/svg/DownChevronIcon";
 import { GENRE_LIST } from "@/constants";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+
+const LoaderLottie = () => {
+  return (
+    <DotLottieReact
+      src="/lotties/loading_gray.lottie" // public/anims/hero.lottie
+      autoplay
+      loop
+      style={{
+        width: "32px",
+        height: "32px",
+      }}
+    />
+  );
+};
 
 const AFFILIATION_OPTIONS = [
   { value: 1, label: "소속" },
@@ -25,7 +39,6 @@ const MultiSortOptionsContextMenu = ({
   options,
   selectedOptions,
   onSelect,
-  onClose,
 }: {
   open: boolean;
   options: { value: number; label: string }[];
@@ -69,7 +82,6 @@ const SortOptionsContextMenu = ({
   options,
   selectedOption,
   onSelect,
-  onClose,
 }: {
   open: boolean;
   options: { value: string | number; label: string }[];
@@ -129,12 +141,7 @@ const ContextMenuItem = styled.div`
 const ProfileEditPage = () => {
   const router = useRouter();
   const { user } = useUser();
-  console.log("user", user);
-  const [artist, setArtist] = useState<
-    Partial<ArtistDetailResponseType> & {
-      height: string;
-    }
-  >({
+  const [artist, setArtist] = useState<ArtistDetailResponseType>({
     id: 0,
     name: "",
     grade: "",
@@ -148,6 +155,9 @@ const ProfileEditPage = () => {
     categoryName: "",
     specialty: "",
     genreList: [],
+    snsList: [],
+    portfolioList: [],
+    artistList: [],
     image: "",
   });
   const [contextMenuOpen1, setContextMenuOpen1] = useState(false);
@@ -157,7 +167,7 @@ const ProfileEditPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [myUploadUrl, setMyUploadUrl] = useState<string | null>(null);
-  const [overLimit, setOverLimit] = useState(false);
+  const [, setOverLimit] = useState(false);
 
   const encodeFileToBase64 = (fileBlob: File) => {
     const reader = new FileReader();
@@ -182,8 +192,6 @@ const ProfileEditPage = () => {
           throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
         }
 
-        console.log("myStageData", response.data);
-
         return response.data;
       },
       staleTime: 5 * 60 * 1000, // 5분
@@ -191,9 +199,7 @@ const ProfileEditPage = () => {
     });
 
   const { mutate: mutateArtist } = useMutation({
-    mutationFn: async (
-      artistData: Partial<ArtistDetailResponseType> & { height: string }
-    ) => {
+    mutationFn: async (artistData: ArtistDetailResponseType) => {
       const formData = new FormData();
       formData.append("file", file as File);
       formData.append(
@@ -228,7 +234,7 @@ const ProfileEditPage = () => {
       }
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       alert("프로필이 성공적으로 업데이트되었습니다.");
       router.replace("/stage");
     },
@@ -239,7 +245,16 @@ const ProfileEditPage = () => {
   });
 
   const handleUpdate = () => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      router.replace("/");
+      return;
+    }
     if (user.category === 1) {
+      if (!artist) {
+        alert("프로필 정보를 불러오는 중입니다. 잠시만 기다려주세요.");
+        return;
+      }
       // 아티스트라면...
       if (!artist.name || artist.name.trim() === "") {
         alert("이름을 입력해주세요.");
@@ -281,7 +296,6 @@ const ProfileEditPage = () => {
 
   useEffect(() => {
     if (myStageData) {
-      console.log("myStageData useEffect", myStageData);
       setArtist({
         id: myStageData.id,
         name: myStageData.name,
@@ -291,17 +305,62 @@ const ProfileEditPage = () => {
         youtubeLink: myStageData.youtubeLink || "",
         birthDate: myStageData.birthDate || "",
         weight: myStageData.weight || "",
-        height: "",
+        height: myStageData.height || "",
         categoryCode: myStageData.categoryCode || "",
         categoryName: myStageData.categoryName || "",
         specialty: myStageData.specialty || "",
         genreList: myStageData.genreList || [],
         image: myStageData.image || "",
+        snsList: myStageData.snsList || [],
+        portfolioList: myStageData.portfolioList || [],
+        artistList: myStageData.artistList || [],
       });
     }
   }, [myStageData]);
 
+  if (!user) {
+    return <div>로그인이 필요합니다.</div>;
+  }
+
   if (user.category === 1) {
+    if (isMyStageLoading) {
+      return (
+        <Container>
+          <ShadowHeader>
+            <div
+              onClick={() => router.back()}
+              style={{ cursor: "pointer", left: 16, position: "absolute" }}
+            >
+              <LeftChevronIcon fill={COLORS.grayscale[100]} />
+            </div>
+            <div
+              style={{
+                ...TYPOGRAPHY.body1["semiBold"],
+                color: COLORS.grayscale[100],
+              }}
+            >
+              프로필 편집
+            </div>
+          </ShadowHeader>
+          <ImageWrapper
+            style={{
+              backgroundColor: COLORS.grayscale[400],
+            }}
+          ></ImageWrapper>
+          <div
+            style={{
+              width: "100%",
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <LoaderLottie />
+          </div>
+        </Container>
+      );
+    }
     return (
       <Container>
         <ShadowHeader>
@@ -344,16 +403,25 @@ const ProfileEditPage = () => {
               }
             }}
           />
-          {(artist?.image || myUploadUrl) && (
+          {myUploadUrl ? (
             <Image
-              src={artist.image || myUploadUrl}
-              alt={artist.name}
+              src={myUploadUrl}
+              alt={"Uploaded Image"}
               fill
               sizes="100%"
               style={{ objectFit: "cover" }}
               priority
             />
-          )}
+          ) : artist.image ? (
+            <Image
+              src={artist.image}
+              alt={"Profile Image"}
+              fill
+              sizes="100%"
+              style={{ objectFit: "cover" }}
+              priority
+            />
+          ) : null}
           <CameraIconBox
             onClick={(e) => {
               e.stopPropagation();
@@ -755,7 +823,7 @@ const ProfileEditPage = () => {
 
   return (
     <Container>
-      <HeaderWithTitle>
+      <ShadowHeader>
         <div
           onClick={() => router.back()}
           style={{ cursor: "pointer", left: 16, position: "absolute" }}
@@ -770,7 +838,7 @@ const ProfileEditPage = () => {
         >
           프로필 편집
         </div>
-      </HeaderWithTitle>
+      </ShadowHeader>
       <ImageWrapper
         style={{
           backgroundColor: COLORS.grayscale[400],
@@ -838,6 +906,7 @@ const ProfileEditPage = () => {
               placeholder="이름을 입력해주세요"
               value={user.name}
               onChange={(e) => {
+                console.log(e.target.value);
                 return;
               }}
             />
@@ -879,6 +948,7 @@ const ProfileEditPage = () => {
               placeholder="소속을 입력해주세요"
               value={""}
               onChange={(e) => {
+                console.log(e.target.value);
                 return;
               }}
             />
@@ -956,16 +1026,6 @@ const FlexRow = styled.div`
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-`;
-
-const HeaderWithTitle = styled.div`
-  width: 100%;
-  height: 57px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 16px;
-  flex-shrink: 0;
 `;
 
 const CameraIconBox = styled.div`

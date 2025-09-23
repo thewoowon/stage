@@ -137,6 +137,20 @@ type ProjectResponseType = {
   endDate: string;
 };
 
+type ProjectExtendedResponseType = {
+  id: number;
+  title: string;
+  image: string;
+  genre: {
+    genreId: number;
+    genreName: string;
+  };
+  endDate: string;
+  company: string;
+  name: string;
+  content: string;
+};
+
 type ProjectListResponseType = {
   totCnt: number;
   projectList: ProjectResponseType[];
@@ -183,6 +197,7 @@ type ArtistDetailResponseType = {
   youtubeLink: string;
   birthDate: string;
   weight: string;
+  height: string;
   categoryCode: string;
   categoryName: string;
   specialty: string;
@@ -209,6 +224,7 @@ export type {
   ArtistListResponseType,
   ProjectResponseType,
   ProjectListResponseType,
+  ProjectExtendedResponseType,
   ArtistDetailResponseType,
   GenreResponseType,
   SNSResponseType,

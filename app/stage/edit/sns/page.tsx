@@ -1,10 +1,8 @@
 "use client";
 import styled from "@emotion/styled";
-import { use, useEffect, useState } from "react";
-import Image from "next/image";
-import { ARTIST_DATA } from "@/components/view/SearchMainView";
+import { useEffect, useState } from "react";
 import { LeftChevronIcon } from "@/components/svg";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { TYPOGRAPHY } from "@/styles/typography";
 import { COLORS } from "@/styles/color";
 import InstagramIcon from "@/components/svg/InstagramIcon";
@@ -14,16 +12,29 @@ import PlusIcon from "@/components/svg/PlusIcon";
 import DownChevronIcon from "@/components/svg/DownChevronIcon";
 import customAxios from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
-import { SNSResponseType } from "@/type";
+import { ArtistDetailResponseType, SNSResponseType } from "@/type";
+import { isValidHttpsUrl } from "@/utils";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
-const SNS_OPTIONS = ["최신순", "인기순", "과거순"];
+const LoaderLottie = () => {
+  return (
+    <DotLottieReact
+      src="/lotties/loading_gray.lottie" // public/anims/hero.lottie
+      autoplay
+      loop
+      style={{
+        width: "32px",
+        height: "32px",
+      }}
+    />
+  );
+};
 
 const OptionsContextMenu = ({
   open,
   options,
   selectedOption,
   onSelect,
-  onClose,
 }: {
   open: boolean;
   options: string[];
@@ -48,7 +59,11 @@ const OptionsContextMenu = ({
               selectedOption === option ? COLORS.grayscale[400] : "",
           }}
         >
-          {option}
+          {option === "youtube" ? (
+            <YoutubeIcon width={20} height={20} />
+          ) : (
+            <InstagramIcon width={20} height={20} />
+          )}
         </ContextMenuItem>
       ))}
     </ContextMenuContainer>
@@ -56,10 +71,10 @@ const OptionsContextMenu = ({
 };
 
 const ContextMenuContainer = styled.div`
-  width: 80px;
+  width: 70px;
   position: absolute;
   top: 110%;
-  right: -6px;
+  right: 0;
   background-color: ${COLORS.grayscale[100]};
   border: 1px solid ${COLORS.grayscale[500]};
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -72,6 +87,9 @@ const ContextMenuItem = styled.div`
   &:hover {
     background-color: ${COLORS.grayscale[400]};
   }
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const SnsEditPage = () => {
@@ -79,32 +97,143 @@ const SnsEditPage = () => {
   const { user } = useUser();
 
   // 동적으로
-  const [snsSettings, setSnsSettins] = useState<SNSResponseType[]>([]);
+  const [snsSettings, setSnsSettins] = useState<
+    (SNSResponseType & {
+      contextMenuOpen?: boolean;
+    })[]
+  >([]);
+
+  const { data: myStageData, isLoading: isMyStageLoading } =
+    useQuery<ArtistDetailResponseType>({
+      queryKey: ["myStage"],
+      queryFn: async () => {
+        const response = await customAxios.get(`/api/stage/getMyArtistStage`);
+        if (response.status !== 200) {
+          throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
+        }
+
+        return response.data;
+      },
+      staleTime: 5 * 60 * 1000, // 5분
+    });
 
   // /api/stage/getSns
   const { data: mySnsData, isLoading: isMySnsLoading } = useQuery<
     SNSResponseType[]
   >({
-    queryKey: ["mySns"],
+    queryKey: ["mySns", myStageData?.id],
     queryFn: async () => {
-      const response = await customAxios.get(`/api/stage/getSns`, {});
+      const response = await customAxios.get(`/api/stage/getSns`, {
+        params: {
+          profileId: myStageData?.id,
+        },
+      });
       if (response.status !== 200) {
         throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
       }
 
-      console.log("myStageData", response.data);
-
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5분
-    enabled: !!user && user.category === 1, // user가 있을 때만 실행
+    enabled: !!myStageData && !!myStageData.id, // user가 있을 때만 실행
   });
+
+  const handleUpdate = async () => {
+    console.log("user:", user);
+    // validation
+    // instagram, youtube 각각 1개씩만 있어야 함.
+    const types = snsSettings.map((sns) => sns.type);
+    const uniqueTypes = new Set(types);
+    if (types.length !== uniqueTypes.size) {
+      alert("같은 SNS 유형은 하나만 추가할 수 있습니다.");
+      return;
+    }
+    // isValidHttpsUrl
+    for (const sns of snsSettings) {
+      if (!sns.title || sns.title.trim() === "") {
+        alert("제목을 입력해주세요.");
+        return;
+      }
+      if (!sns.url || sns.url.trim() === "") {
+        alert("URL을 입력해주세요.");
+        return;
+      }
+      if (!isValidHttpsUrl(sns.url)) {
+        alert("유효한 HTTPS URL을 입력해주세요.");
+        return;
+      }
+    }
+
+    if (!myStageData) {
+      alert("아티스트 스테이지 정보가 없습니다. 다시 시도해주세요.");
+      return;
+    }
+
+    try {
+      const response = await customAxios.post(`/api/stage/createSns`, {
+        id: myStageData?.id,
+        snsData: snsSettings.map((sns) => ({
+          title: sns.title,
+          type: sns.type,
+          url: sns.url,
+        })),
+      });
+
+      if (response.status !== 200) {
+        throw new Error("프로필 정보를 업데이트하는 데 실패했습니다.");
+      }
+
+      alert("저장되었습니다.");
+      router.back();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("프로필 정보를 업데이트하는 데 실패했습니다.");
+    }
+  };
 
   useEffect(() => {
     if (mySnsData && mySnsData.length > 0) {
       setSnsSettins(mySnsData);
     }
   }, [mySnsData]);
+
+  if (isMyStageLoading || isMySnsLoading) {
+    return (
+      <Container>
+        <ShadowHeader>
+          <div onClick={() => router.back()} style={{ cursor: "pointer" }}>
+            <LeftChevronIcon fill="black" />
+          </div>
+          <div
+            style={{
+              ...TYPOGRAPHY.body1["semiBold"],
+            }}
+          >
+            공식 SNS 편집
+          </div>
+          <div
+            onClick={() => {
+              return;
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            <PlusIcon />
+          </div>
+        </ShadowHeader>
+        <div
+          style={{
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <LoaderLottie />
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container>
@@ -121,6 +250,8 @@ const SnsEditPage = () => {
         </div>
         <div
           onClick={() => {
+            if (snsSettings.length >= 2) return;
+
             const newSettings = [...snsSettings];
             newSettings.push({ id: 0, type: "instagram", title: "", url: "" });
             setSnsSettins(newSettings);
@@ -149,7 +280,7 @@ const SnsEditPage = () => {
                 marginBottom: "10px",
               }}
             >
-              프로젝트
+              제목
             </div>
             <FlexRow
               style={{
@@ -164,7 +295,7 @@ const SnsEditPage = () => {
                   ...TYPOGRAPHY.body2["regular"],
                   paddingLeft: "10px",
                 }}
-                placeholder="프로젝트명을 입력해주세요."
+                placeholder="제목을 입력해주세요"
                 value={sns.title}
                 onChange={(e) => {
                   const newSettings = [...snsSettings];
@@ -200,6 +331,14 @@ const SnsEditPage = () => {
                   justifyContent: "center",
                   alignItems: "center",
                 }}
+                onClick={() => {
+                  setSnsSettins((prev) => {
+                    const newSettings = [...prev];
+                    newSettings[index].contextMenuOpen =
+                      !newSettings[index].contextMenuOpen;
+                    return newSettings;
+                  });
+                }}
               >
                 {sns.type === "youtube" ? (
                   <YoutubeIcon width={20} height={20} />
@@ -207,6 +346,23 @@ const SnsEditPage = () => {
                   <InstagramIcon width={20} height={20} />
                 )}
                 <DownChevronIcon fill="black" />
+                <OptionsContextMenu
+                  open={sns.contextMenuOpen || false}
+                  options={["instagram", "youtube"]}
+                  selectedOption={sns.type}
+                  onSelect={(option) => {
+                    console.log("select", option);
+                    const newSettings = [...snsSettings];
+                    newSettings[index].type = option as "instagram" | "youtube";
+                    newSettings[index].contextMenuOpen = false;
+                    setSnsSettins(newSettings);
+                  }}
+                  onClose={() => {
+                    const newSettings = [...snsSettings];
+                    newSettings[index].contextMenuOpen = false;
+                    setSnsSettins(newSettings);
+                  }}
+                />
               </FlexRow>
               <FlexRow
                 style={{
@@ -236,6 +392,13 @@ const SnsEditPage = () => {
           </div>
         </div>
       ))}
+      <ButtonWrapper>
+        <ButtonBox>
+          {snsSettings.length > 0 && (
+            <Button onClick={handleUpdate}>저장</Button>
+          )}
+        </ButtonBox>
+      </ButtonWrapper>
     </Container>
   );
 };
@@ -270,28 +433,6 @@ const ShadowHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-`;
-
-const ImageWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  height: 248px;
-  flex-shrink: 0;
-`;
-
-const Flex = styled.div`
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin-bottom: 8px;
-`;
-
-const Divider = styled.div`
-  width: 100%;
-  height: 8px;
-  background-color: #f4f4f4;
-  margin: 16px 0;
-  flex-shrink: 0;
 `;
 
 const ButtonBox = styled.div`
@@ -347,4 +488,14 @@ const CustomInput = styled.input`
   &::placeholder {
     color: ${COLORS.grayscale[500]};
   }
+`;
+
+const ButtonWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: absolute;
+  bottom: 20px;
+  gap: 12px;
 `;

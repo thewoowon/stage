@@ -2,7 +2,10 @@ const PlusIcon = ({
   width = 24,
   height = 24,
   fill = "black",
-}: SvgIconProps) => {
+  opacity = 0.5,
+}: SvgIconProps & {
+  opacity?: number;
+}) => {
   return (
     <svg
       width={width}
@@ -11,7 +14,7 @@ const PlusIcon = ({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <g opacity="0.5">
+      <g opacity={opacity}>
         <path d="M3 12H21" stroke={fill} />
         <path d="M12 3V21" stroke={fill} />
       </g>

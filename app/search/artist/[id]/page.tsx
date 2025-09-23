@@ -12,6 +12,21 @@ import { useUser } from "@/contexts/UserContext";
 import { useQuery } from "@tanstack/react-query";
 import customAxios from "@/lib/axios";
 import { ArtistDetailResponseType } from "@/type";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+
+const LoaderLottie = () => {
+  return (
+    <DotLottieReact
+      src="/lotties/loading_gray.lottie" // public/anims/hero.lottie
+      autoplay
+      loop
+      style={{
+        width: "32px",
+        height: "32px",
+      }}
+    />
+  );
+};
 
 const ArtistCard = ({
   artist,
@@ -149,13 +164,11 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             alignItems: "center",
           }}
         >
-          <div style={{ ...TYPOGRAPHY.body1["medium"] }}>Loading...</div>
+          <LoaderLottie />
         </div>
       </Container>
     );
   }
-
-  console.log("artist data:", data);
 
   return (
     <Container>
@@ -210,10 +223,11 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <div
             style={{
               cursor:
-                data.youtubeLink !== "https://" ? "pointer" : "not-allowed",
+                data?.youtubeLink !== "https://" ? "pointer" : "not-allowed",
             }}
             onClick={() => {
-              if (data.youtubeLink === "https://") return;
+              if (data?.youtubeLink === "https://") return;
+              if (!data?.youtubeLink) return;
               router.push(data.youtubeLink || "");
             }}
           >
@@ -222,10 +236,11 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <div
             style={{
               cursor:
-                data.instagramLink !== "https://" ? "pointer" : "not-allowed",
+                data?.instagramLink !== "https://" ? "pointer" : "not-allowed",
             }}
             onClick={() => {
-              if (data.instagramLink === "https://") return;
+              if (data?.instagramLink === "https://") return;
+              if (!data?.instagramLink) return;
               router.push(data.instagramLink || "");
             }}
           >
@@ -245,7 +260,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             생년
           </div>
           <div>
-            {data.birthDate ? data.birthDate.slice(0, 10) : "알 수 없음"}
+            {data?.birthDate ? data?.birthDate.slice(0, 10) : "알 수 없음"}
           </div>
         </Flex>
         <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
@@ -258,7 +273,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           >
             신장
           </div>
-          <div>{data.weight ? `${data.weight} cm` : "알 수 없음"}</div>
+          <div>{data?.height ? `${data.height} cm` : "알 수 없음"}</div>
         </Flex>
         <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
           <div
@@ -270,7 +285,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           >
             체중
           </div>
-          <div>{data.weight ? `${data.weight} kg` : "알 수 없음"}</div>
+          <div>{data?.weight ? `${data.weight} kg` : "알 수 없음"}</div>
         </Flex>
         <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
           <div
@@ -283,7 +298,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             특기
           </div>
           <div>
-            {Array.isArray(data.specialty) ? data.specialty.join(", ") : "없음"}
+            {Array.isArray(data?.specialty)
+              ? data.specialty.join(", ")
+              : "없음"}
           </div>
         </Flex>
         <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
@@ -297,8 +314,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             분야
           </div>
           <div style={{ display: "flex", gap: 6 }}>
-            {data.genreList.length === 0 && "없음"}
-            {data.genreList.length > 0 &&
+            {data?.genreList.length === 0 && "없음"}
+            {data &&
+              data.genreList.length > 0 &&
               data.genreList.map((genre, index) => (
                 <span
                   key={index}
@@ -325,8 +343,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           공식 SNS
         </Title>
         <HorizontalThemeScrollContainer>
-          {data.snsList.length === 0 && "없음"}
-          {data.snsList.length > 0 &&
+          {data?.snsList.length === 0 && "없음"}
+          {data &&
+            data.snsList.length > 0 &&
             data.snsList.map((sns) => {
               if (sns.type === "1") {
                 return (
@@ -432,8 +451,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             gap: 8,
           }}
         >
-          {data.portfolioList.length === 0 && "없음"}
-          {data.portfolioList.length > 0 &&
+          {data?.portfolioList.length === 0 && "없음"}
+          {data &&
+            data.portfolioList.length > 0 &&
             data.portfolioList.map((portfolio) => (
               <PortfolioBox key={portfolio.id}>
                 <FlexRow style={{ gap: 6 }}>
@@ -483,14 +503,14 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           AI 추천 유사 아티스트
         </Title>
         <HorizontalThemeScrollContainer>
-          {(!data.artistList || data.artistList.length === 0) && "없음"}
-          {data.artistList &&
+          {(!data?.artistList || data.artistList.length === 0) && "없음"}
+          {data?.artistList &&
             data.artistList?.map((artist, index) => (
               <ArtistCard key={index} artist={artist} />
             ))}
         </HorizontalThemeScrollContainer>
       </div>
-      {user.category === 2 && (
+      {user?.category === 2 && (
         <ButtonBox>
           <Button onClick={handleConnection}>연결 보내기</Button>
         </ButtonBox>

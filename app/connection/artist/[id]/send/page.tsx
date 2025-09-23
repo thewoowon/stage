@@ -8,21 +8,35 @@ import { COLORS } from "@/styles/color";
 import { TYPOGRAPHY } from "@/styles/typography";
 import { ArtistDetailResponseType } from "@/type";
 import styled from "@emotion/styled";
-import { useQuery } from "@tanstack/react-query";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+
+const LoaderLottie = () => {
+  return (
+    <DotLottieReact
+      src="/lotties/loading_gray.lottie" // public/anims/hero.lottie
+      autoplay
+      loop
+      style={{
+        width: "32px",
+        height: "32px",
+      }}
+    />
+  );
+};
 
 const SortOptionsContextMenu = ({
   open,
   options,
   selectedOption,
   onSelect,
-  onClose,
 }: {
   open: boolean;
-  options: string[];
-  selectedOption?: string | null;
-  onSelect: (option: string) => void;
+  options: { value: string | number; label: string }[];
+  selectedOption?: string | number | null;
+  onSelect: (option: string | number) => void;
   onClose: () => void;
 }) => {
   if (!open) return null;
@@ -37,18 +51,18 @@ const SortOptionsContextMenu = ({
       {options.length > 0 &&
         options.map((option) => (
           <ContextMenuItem
-            key={option}
+            key={option.value}
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(option);
+              onSelect(option.value);
             }}
             style={{
               ...TYPOGRAPHY.body2["regular"],
               backgroundColor:
-                selectedOption === option ? COLORS.grayscale[400] : "",
+                selectedOption === option.value ? COLORS.grayscale[400] : "",
             }}
           >
-            {option}
+            {option.label}
           </ContextMenuItem>
         ))}
     </ContextMenuContainer>
@@ -82,7 +96,7 @@ const ArtistConnectionPage = ({
   const { id } = use(params);
   const router = useRouter();
   const { user } = useUser();
-  const [project, setProject] = useState<string | null>(null);
+  const [project, setProject] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
 
@@ -128,42 +142,77 @@ const ArtistConnectionPage = ({
     enabled: !!user?.id && user?.category === 2,
   });
 
+  const { mutate: sendConnection } = useMutation({
+    mutationFn: async () => {
+      const response = await customAxios.post("/api/connect/connectArtist", {
+        stageId: id,
+        projectId: project,
+        message,
+      });
+
+      if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      router.push(`/search/artist/${id}?status=connected`);
+    },
+    onError: (error) => {
+      console.error("Error sending connection:", error);
+      alert("연결을 보내는 중 오류가 발생했습니다. 다시 시도해주세요.");
+    },
+  });
+
   const handleSending = () => {
-    if (user.category === 1) {
-      window.location.href =
-        "https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=email%20profile&access_type=offline&prompt=consent";
-    } else {
-      router.push(`/connection/artist/${id}/send`);
+    if (!project) {
+      alert("프로젝트를 선택해주세요.");
+      return;
     }
+    if (message.length === 0) {
+      alert("메세지를 입력해주세요.");
+      return;
+    }
+    if (message.length > 300) {
+      alert("메세지는 300자 이내로 작성해주세요.");
+      return;
+    }
+    sendConnection();
   };
 
   if (!data || isLoading) {
     return (
       <Container>
-        <div style={{ flex: 1, width: "100%" }}>
-          <HeaderWithTitle>
-            <div
-              onClick={() => router.back()}
-              style={{ cursor: "pointer", position: "absolute", left: 16 }}
-            >
-              <LeftChevronIcon fill="#111111" />
-            </div>
-            <div>연결 상세</div>
-          </HeaderWithTitle>
+        <HeaderWithTitle>
           <div
-            style={{ padding: "0 16px", width: "100%", marginBottom: "40px" }}
+            onClick={() => router.back()}
+            style={{ cursor: "pointer", position: "absolute", left: 16 }}
           >
-            <Title
-              style={{
-                ...TYPOGRAPHY.h3["bold"],
-                color: "#111111",
-              }}
-            ></Title>
+            <LeftChevronIcon fill="#111111" />
           </div>
+          <div>연결 상세</div>
+        </HeaderWithTitle>
+        <div style={{ padding: "0 16px", width: "100%", marginBottom: "40px" }}>
+          <Title
+            style={{
+              ...TYPOGRAPHY.h3["bold"],
+              color: "#111111",
+            }}
+          ></Title>
         </div>
-        <ButtonBox>
-          <Button onClick={handleSending}>연결 보내기</Button>
-        </ButtonBox>
+        <div
+          style={{
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingBottom: "100px",
+          }}
+        >
+          <LoaderLottie />
+        </div>
       </Container>
     );
   }
@@ -326,15 +375,20 @@ const ArtistConnectionPage = ({
                 ...TYPOGRAPHY.body2["regular"],
               }}
             >
-              {project || "선택"}
+              {ongoingProjects?.find((proj) => proj.id === project)?.title ||
+                "선택"}
             </div>
             <DownChevronIcon />
             <SortOptionsContextMenu
               open={contextMenuOpen}
-              options={ongoingProjects?.map((proj) => proj.title) || []}
+              options={
+                ongoingProjects?.map((proj) => {
+                  return { value: proj.id, label: proj.title };
+                }) || []
+              }
               selectedOption={project}
               onSelect={(option) => {
-                setProject(option);
+                setProject(option as number);
                 setContextMenuOpen(false);
               }}
               onClose={() => {
@@ -471,21 +525,6 @@ const Button = styled.button`
     background-color: ${COLORS.grayscale[200]};
     color: ${COLORS.grayscale[500]};
     cursor: not-allowed;
-  }
-`;
-
-const Input = styled.input`
-  width: 100%;
-  height: 100%;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: -2%;
-  color: ${COLORS.grayscale[900]};
-  &::placeholder {
-    color: ${COLORS.grayscale[400]};
   }
 `;
 

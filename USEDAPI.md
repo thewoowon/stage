@@ -25,9 +25,11 @@
 
 - /api/stage/createArtistStage
 - /api/stage/createCasterStage
+- /api/stage/createSns
 - /api/stage/getMyArtistStage
 - /api/stage/getStage
 - /api/stage/getStageList
+- /api/stage/getSns
 
 ## Token
 

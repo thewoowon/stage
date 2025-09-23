@@ -1,6 +1,5 @@
 "use client";
 
-import { PROJECT_DATA } from "@/components/view/SearchMainView";
 import { COLORS } from "@/styles/color";
 import { TYPOGRAPHY } from "@/styles/typography";
 import { useUser } from "@/contexts/UserContext";
@@ -8,6 +7,24 @@ import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
 import { LeftChevronIcon } from "@/components/svg";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ProjectExtendedResponseType } from "@/type";
+import customAxios from "@/lib/axios";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+
+const LoaderLottie = () => {
+  return (
+    <DotLottieReact
+      src="/lotties/loading_gray.lottie" // public/anims/hero.lottie
+      autoplay
+      loop
+      style={{
+        width: "32px",
+        height: "32px",
+      }}
+    />
+  );
+};
 
 const ProjectConnectionPage = ({
   params,
@@ -16,24 +33,94 @@ const ProjectConnectionPage = ({
 }) => {
   const { id } = use(params);
   const router = useRouter();
-  const { user } = useUser();
   const [message, setMessage] = useState("");
 
-  const project = PROJECT_DATA.find((project) => project.id === Number(id));
-  if (!project) {
-    return <div>Project not found</div>;
-  }
+  const { data: projectData, isLoading: projectIsLoading } =
+    useQuery<ProjectExtendedResponseType>({
+      queryKey: ["project", id],
+      queryFn: async () => {
+        const response = await customAxios.get(`/api/project/getProject`, {
+          params: { projectId: id },
+        });
+
+        if (response.status !== 200) {
+          throw new Error("Network response was not ok");
+        }
+
+        return response.data;
+      },
+      enabled: !!id,
+    });
+
+  const { mutate: sendConnection } = useMutation({
+    mutationFn: async () => {
+      const response = await customAxios.post("/api/connect/connectProject", {
+        projectId: id,
+        message,
+      });
+
+      if (response.status !== 200) {
+        throw new Error("Network response was not ok");
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      router.push(`/search/project/${id}?status=connected`);
+    },
+    onError: (error) => {
+      console.error("Error sending connection:", error);
+      alert("연결을 보내는 중 오류가 발생했습니다. 다시 시도해주세요.");
+    },
+  });
 
   const handleSending = () => {
-    router.replace(`/search/project/${id}?status=connected`);
-    return;
-    if (user.category === 1) {
-      window.location.href =
-        "https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&response_type=code&scope=email%20profile&access_type=offline&prompt=consent";
-    } else {
-      router.push(`/connection/artist/${id}/send`);
+    if (message.length === 0) {
+      alert("메세지를 입력해주세요.");
+      return;
     }
+    if (message.length > 300) {
+      alert("메세지는 300자 이내로 작성해주세요.");
+      return;
+    }
+    sendConnection();
   };
+
+  if (!projectData || projectIsLoading) {
+    return (
+      <Container>
+        <HeaderWithTitle>
+          <div
+            onClick={() => router.back()}
+            style={{ cursor: "pointer", position: "absolute", left: 16 }}
+          >
+            <LeftChevronIcon fill="#111111" />
+          </div>
+          <div>연결 상세</div>
+        </HeaderWithTitle>
+        <div style={{ padding: "0 16px", width: "100%", marginBottom: "40px" }}>
+          <Title
+            style={{
+              ...TYPOGRAPHY.h3["bold"],
+              color: "#111111",
+            }}
+          ></Title>
+        </div>
+        <div
+          style={{
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingBottom: "100px",
+          }}
+        >
+          <LoaderLottie />
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container>
@@ -79,19 +166,16 @@ const ProjectConnectionPage = ({
                 분야
               </div>
               <div style={{ display: "flex", gap: 6 }}>
-                {project.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      ...TYPOGRAPHY.caption["medium"],
-                      color: COLORS.grayscale[100],
-                      backgroundColor: COLORS.primary[500],
-                      padding: "2px 6px",
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
+                <span
+                  style={{
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[100],
+                    backgroundColor: COLORS.primary[500],
+                    padding: "2px 6px",
+                  }}
+                >
+                  {projectData?.genre.genreName}
+                </span>
               </div>
             </Flex>
             <Flex
@@ -110,7 +194,7 @@ const ProjectConnectionPage = ({
               >
                 프로젝트
               </div>
-              <div>{project.title}</div>
+              <div>{projectData?.title}</div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
               <div
@@ -122,7 +206,7 @@ const ProjectConnectionPage = ({
               >
                 마감일
               </div>
-              <div>{project.deadline}</div>
+              <div>{projectData?.endDate}</div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
               <div
@@ -134,7 +218,7 @@ const ProjectConnectionPage = ({
               >
                 제작사
               </div>
-              <div>{project.company}</div>
+              <div>{projectData?.company}</div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
               <div
@@ -146,7 +230,7 @@ const ProjectConnectionPage = ({
               >
                 캐스터
               </div>
-              <div>{project.caster}</div>
+              <div>{projectData?.name}</div>
             </Flex>
           </div>
         </div>
@@ -185,6 +269,7 @@ const ProjectConnectionPage = ({
           </div>
         </div>
       </div>
+
       <ButtonBox>
         <Button onClick={handleSending}>연결 보내기</Button>
       </ButtonBox>
@@ -268,21 +353,6 @@ const Button = styled.button`
     background-color: ${COLORS.grayscale[200]};
     color: ${COLORS.grayscale[500]};
     cursor: not-allowed;
-  }
-`;
-
-const Input = styled.input`
-  width: 100%;
-  height: 100%;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: -2%;
-  color: ${COLORS.grayscale[900]};
-  &::placeholder {
-    color: ${COLORS.grayscale[400]};
   }
 `;
 

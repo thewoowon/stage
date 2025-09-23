@@ -2,6 +2,7 @@
 import GNB from "@/components/layout/GNB";
 import SandWatchIcon from "@/components/svg/SandWatchIcon";
 import XWithCircleIcon from "@/components/svg/XWithCircleIcon";
+import { GENRE_LIST } from "@/constants";
 import { useUser } from "@/contexts/UserContext";
 import customAxios from "@/lib/axios";
 import { COLORS } from "@/styles/color";
@@ -9,56 +10,7 @@ import { TYPOGRAPHY } from "@/styles/typography";
 import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-
-const SENT_PROJECT_DATA = [
-  {
-    id: 1,
-    title: "나의 아저씨",
-    genre: "드라마",
-    status: "촬영중",
-    statusCode: 1,
-    image:
-      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
-    company: "tvN",
-  },
-];
-
-const RECEIEVED_PROJECT_DATA = [
-  {
-    id: 1,
-    title: "나의 아저씨",
-    genre: "드라마",
-    status: "촬영중",
-    statusCode: 1,
-    image:
-      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
-    company: "tvN",
-  },
-];
-
-const SENT_ARTIST_DATA = [
-  {
-    id: 1,
-    name: "아이유",
-    title: "배우",
-    status: "섭외중",
-    statusCode: 1,
-    image:
-      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
-  },
-];
-
-const RECEIEVED_ARTIST_DATA = [
-  {
-    id: 1,
-    name: "아이유",
-    title: "배우",
-    status: "섭외중",
-    statusCode: 1,
-    image:
-      "https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyMDAzMDNfMTYy%2FMDAxNTgzNjI0NzI0NzE3.XxX4rYkYkzHk9n1c1j8nJQmX1a5r9g5cZV8vZtV6gYgg.4nUu7c3bGZ1k8J6vU6qfXoFqfXoFqfXoFqfXoFqfXoFqg.JPEG.choi1225%2FIMG_20200303_124947.jpg&type=sc960_832",
-  },
-];
+import Image from "next/image";
 
 const SentList = ({
   category,
@@ -68,7 +20,7 @@ const SentList = ({
   data: (SimpleArtistType | SimpleProjectType)[];
 }) => {
   const router = useRouter();
-  if (data.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <div
         style={{
@@ -111,7 +63,7 @@ const SentList = ({
               cursor: "pointer",
             }}
             onClick={() => {
-              router.push(`/connection/artist/${item.id}/sent`);
+              router.push(`/connection/project/${item.id}/sent`);
             }}
           >
             <div
@@ -122,9 +74,17 @@ const SentList = ({
                 backgroundColor: COLORS.grayscale[500],
               }}
             >
+              <Image
+                src={item.image}
+                alt={item.title}
+                fill
+                sizes="100%"
+                style={{ objectFit: "cover" }}
+                priority
+              />
               <div style={{ position: "absolute", top: 4, left: 4 }}>
-                <XWithCircleIcon />
-                {false && <SandWatchIcon />}
+                {item.statusCode === 0 && <SandWatchIcon />}
+                {item.statusCode === 1 && <XWithCircleIcon />}
               </div>
             </div>
             <div
@@ -151,7 +111,9 @@ const SentList = ({
                     padding: "2px 6px",
                   }}
                 >
-                  {item.genre}
+                  {GENRE_LIST.find(
+                    (genre) => genre.genreId === Number(item.genre)
+                  )?.genreName || item.genre}
                 </span>
                 {item.title}
               </div>
@@ -172,15 +134,15 @@ const SentList = ({
                 >
                   <div
                     style={{
-                      minWidth: "30px",
-                      width: "30px",
+                      minWidth: "40px",
+                      width: "40px",
                       ...TYPOGRAPHY.caption["medium"],
                       color: COLORS.grayscale[700],
                     }}
                   >
-                    배역
+                    소속사
                   </div>{" "}
-                  {item.status}
+                  {item.company}
                 </div>
                 <div
                   style={{
@@ -193,8 +155,8 @@ const SentList = ({
                 >
                   <div
                     style={{
-                      minWidth: "30px",
-                      width: "30px",
+                      minWidth: "40px",
+                      width: "40px",
                       ...TYPOGRAPHY.caption["medium"],
                       color: COLORS.grayscale[700],
                     }}
@@ -231,20 +193,97 @@ const SentList = ({
             cursor: "pointer",
           }}
           onClick={() => {
-            router.push(`/connection/project/${item.id}/sent`);
+            router.push(`/connection/artist/${item.id}/sent`);
           }}
         >
           <div
             style={{
+              position: "relative",
               width: "86px",
               height: "86px",
-              backgroundColor: COLORS.grayscale[1300],
+              backgroundColor: COLORS.grayscale[500],
             }}
-          ></div>
-          <div>
-            <div>{item.title}</div>
-            <div>프로젝트 {item.title}</div>
-            <div>상태 {item.status}</div>
+          >
+            <Image
+              src={item.image}
+              alt={item.title}
+              fill
+              sizes="100%"
+              style={{ objectFit: "cover" }}
+              priority
+            />
+            <div style={{ position: "absolute", top: 4, left: 4 }}>
+              {item.statusCode === 0 && <SandWatchIcon />}
+              {item.statusCode === 1 && <XWithCircleIcon />}
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+              justifyContent: "space-between",
+            }}
+          >
+            <div
+              style={{
+                ...TYPOGRAPHY.body1["semiBold"],
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              {item.name}
+            </div>
+            <div
+              style={{
+                ...TYPOGRAPHY.body2["regular"],
+                color: COLORS.grayscale[1300],
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: 3,
+                  alignItems: "center",
+                  ...TYPOGRAPHY.body2["regular"],
+                }}
+              >
+                <div
+                  style={{
+                    minWidth: "50px",
+                    width: "50px",
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[700],
+                  }}
+                >
+                  프로젝트
+                </div>{" "}
+                {item.title}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: 3,
+                  alignItems: "center",
+                  ...TYPOGRAPHY.body2["regular"],
+                }}
+              >
+                <div
+                  style={{
+                    minWidth: "50px",
+                    width: "50px",
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[700],
+                  }}
+                >
+                  상태
+                </div>{" "}
+                {item.status}
+              </div>
+            </div>
           </div>
         </div>
       ))}
@@ -259,7 +298,8 @@ const ReceivedList = ({
   category: number | null;
   data: (SimpleProjectType | SimpleArtistType)[];
 }) => {
-  if (data.length === 0) {
+  const router = useRouter();
+  if (!data || data.length === 0) {
     return (
       <div
         style={{
@@ -294,7 +334,15 @@ const ReceivedList = ({
         {newProjectData.map((item) => (
           <div
             key={item.id}
-            style={{ width: "100%", display: "flex", gap: "10px" }}
+            style={{
+              width: "100%",
+              display: "flex",
+              gap: "10px",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              router.push(`/connection/project/${item.id}/received`);
+            }}
           >
             <div
               style={{
@@ -304,9 +352,17 @@ const ReceivedList = ({
                 backgroundColor: COLORS.grayscale[500],
               }}
             >
-              {" "}
+              <Image
+                src={item.image}
+                alt={item.title}
+                fill
+                sizes="100%"
+                style={{ objectFit: "cover" }}
+                priority
+              />
               <div style={{ position: "absolute", top: 4, left: 4 }}>
-                <XWithCircleIcon />
+                {item.statusCode === 0 && <SandWatchIcon />}
+                {item.statusCode === 1 && <XWithCircleIcon />}
               </div>
             </div>
             <div
@@ -333,7 +389,9 @@ const ReceivedList = ({
                     padding: "2px 6px",
                   }}
                 >
-                  {item.genre}
+                  {GENRE_LIST.find(
+                    (genre) => genre.genreId === Number(item.genre)
+                  )?.genreName || item.genre}
                 </span>
                 {item.title}
               </div>
@@ -354,15 +412,15 @@ const ReceivedList = ({
                 >
                   <div
                     style={{
-                      minWidth: "30px",
-                      width: "30px",
+                      minWidth: "40px",
+                      width: "40px",
                       ...TYPOGRAPHY.caption["medium"],
                       color: COLORS.grayscale[700],
                     }}
                   >
-                    배역
+                    소속사
                   </div>{" "}
-                  {item.status}
+                  {item.company}
                 </div>
                 <div
                   style={{
@@ -375,8 +433,8 @@ const ReceivedList = ({
                 >
                   <div
                     style={{
-                      minWidth: "30px",
-                      width: "30px",
+                      minWidth: "40px",
+                      width: "40px",
                       ...TYPOGRAPHY.caption["medium"],
                       color: COLORS.grayscale[700],
                     }}
@@ -394,20 +452,116 @@ const ReceivedList = ({
   }
 
   return (
-    <div>
+    <div
+      style={{
+        width: "100%",
+        padding: "16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+      }}
+    >
       {newArtistData.map((item) => (
-        <div key={item.id}>
+        <div
+          key={item.id}
+          style={{
+            width: "100%",
+            display: "flex",
+            gap: "10px",
+            cursor: "pointer",
+          }}
+          onClick={() => {
+            router.push(`/connection/project/${item.id}/received`);
+          }}
+        >
           <div
             style={{
+              position: "relative",
               width: "86px",
               height: "86px",
-              backgroundColor: COLORS.grayscale[1300],
+              backgroundColor: COLORS.grayscale[500],
             }}
-          ></div>
-          <div>
-            <div>{item.name}</div>
-            <div>프로젝트 {item.title}</div>
-            <div>상태 {item.status}</div>
+          >
+            <Image
+              src={item.image}
+              alt={item.title}
+              fill
+              sizes="100%"
+              style={{ objectFit: "cover" }}
+              priority
+            />
+            <div style={{ position: "absolute", top: 4, left: 4 }}>
+              {item.statusCode === 0 && <SandWatchIcon />}
+              {item.statusCode === 1 && <XWithCircleIcon />}
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+              justifyContent: "space-between",
+            }}
+          >
+            <div
+              style={{
+                ...TYPOGRAPHY.body1["semiBold"],
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              {item.name}
+            </div>
+            <div
+              style={{
+                ...TYPOGRAPHY.body2["regular"],
+                color: COLORS.grayscale[1300],
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: 3,
+                  alignItems: "center",
+                  ...TYPOGRAPHY.body2["regular"],
+                }}
+              >
+                <div
+                  style={{
+                    minWidth: "50px",
+                    width: "50px",
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[700],
+                  }}
+                >
+                  프로젝트
+                </div>{" "}
+                {item.title}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: 3,
+                  alignItems: "center",
+                  ...TYPOGRAPHY.body2["regular"],
+                }}
+              >
+                <div
+                  style={{
+                    minWidth: "50px",
+                    width: "50px",
+                    ...TYPOGRAPHY.caption["medium"],
+                    color: COLORS.grayscale[700],
+                  }}
+                >
+                  상태
+                </div>{" "}
+                {item.status}
+              </div>
+            </div>
           </div>
         </div>
       ))}
@@ -436,7 +590,6 @@ type SimpleProjectType = {
 
 const ConnectionPage = () => {
   const { user } = useUser();
-  console.log("user", user);
   const [viewMode, setViewMode] = useState<"sent" | "received">("sent");
   const [sentList, setSentList] = useState<
     SimpleArtistType[] | SimpleProjectType[]
@@ -455,40 +608,72 @@ const ConnectionPage = () => {
   // /api/connect/getSendArtistList -> 캐스터가 보낸 연결
 
   const fetchSentList = useCallback(async () => {
+    console.log("Fetching sent list for user:", user);
+    if (!user) return;
     if (user.category === 1) {
       // 아티스트
       const response = await customAxios.get("/api/connect/getSendProjectList");
+
+      if (response.status !== 200) {
+        console.error("Failed to fetch sent project list:", response);
+        return [];
+      }
+
+      console.log("Sent project list response data:", response.data);
       return response.data;
     } else {
       // 캐스터
       const response = await customAxios.get("/api/connect/getSendArtistList");
+
+      console.log("Sent artist list response data:", response.data);
+
+      if (response.status !== 200) {
+        console.error("Failed to fetch sent artist list:", response);
+        return [];
+      }
+
       return response.data;
     }
-  }, [user.category]);
+  }, [user]);
 
   const fetchReceivedList = useCallback(async () => {
+    if (!user) return;
     if (user.category === 1) {
       // 아티스트
       const response = await customAxios.get("/api/connect/getRecvProjectList");
+
+      if (response.status !== 200) {
+        console.error("Failed to fetch received project list:", response);
+        return [];
+      }
+
       return response.data;
     } else {
       // 캐스터
       const response = await customAxios.get("/api/connect/getRecvArtistList");
+
+      if (response.status !== 200) {
+        console.error("Failed to fetch received artist list:", response);
+        return [];
+      }
+
       return response.data;
     }
-  }, [user.category]);
+  }, [user]);
 
   useEffect(() => {
     const getData = async () => {
       const sentData = await fetchSentList();
-      console.log("sentData", sentData);
-      // setSentList(sentData);
+      setSentList(sentData);
       const receivedData = await fetchReceivedList();
-      console.log("receivedData", receivedData);
-      // setReceivedList(receivedData);
+      setReceivedList(receivedData);
     };
     getData();
   }, [fetchReceivedList, fetchSentList]);
+
+  if (!user) {
+    return <div>로그인이 필요합니다.</div>;
+  }
 
   return (
     <Container>
@@ -526,9 +711,9 @@ const ConnectionPage = () => {
         </ArtistProjectButton>
       </ArtistProjectButtonContainer>
       {viewMode === "sent" ? (
-        <SentList category={1} data={sentList} />
+        <SentList category={user?.category} data={sentList} />
       ) : (
-        <ReceivedList category={1} data={receivedList} />
+        <ReceivedList category={user?.category} data={receivedList} />
       )}
       <GNB />
     </Container>
