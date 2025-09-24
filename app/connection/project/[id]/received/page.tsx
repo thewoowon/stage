@@ -2,7 +2,6 @@
 
 import { COLORS } from "@/styles/color";
 import { TYPOGRAPHY } from "@/styles/typography";
-import { useUser } from "@/contexts/UserContext";
 import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
@@ -11,6 +10,21 @@ import { useQuery } from "@tanstack/react-query";
 import { ProjectConnectedResponseType } from "@/type";
 import customAxios from "@/lib/axios";
 import { GENRE_LIST } from "@/constants";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+
+const LoaderLottie = () => {
+  return (
+    <DotLottieReact
+      src="/lotties/loading_gray.lottie" // public/anims/hero.lottie
+      autoplay
+      loop
+      style={{
+        width: "32px",
+        height: "32px",
+      }}
+    />
+  );
+};
 
 const ProjectConnectionPage = ({
   params,
@@ -37,6 +51,34 @@ const ProjectConnectionPage = ({
       },
       enabled: !!id,
     });
+
+  if (!projectData || projectIsLoading) {
+    return (
+      <Container>
+        <HeaderWithTitle>
+          <div
+            onClick={() => router.back()}
+            style={{ cursor: "pointer", position: "absolute", left: 16 }}
+          >
+            <LeftChevronIcon fill="#111111" />
+          </div>
+          <div>연결 상세</div>
+        </HeaderWithTitle>
+        <div
+          style={{
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingBottom: "100px",
+          }}
+        >
+          <LoaderLottie />
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container>
