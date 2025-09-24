@@ -12,6 +12,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+import toast from "react-hot-toast";
 
 const LoaderLottie = () => {
   return (
@@ -161,21 +162,21 @@ const ArtistConnectionPage = ({
     },
     onError: (error) => {
       console.error("Error sending connection:", error);
-      alert("연결을 보내는 중 오류가 발생했습니다. 다시 시도해주세요.");
+      toast.error("연결을 보내는 중 오류가 발생했습니다. 다시 시도해주세요.");
     },
   });
 
   const handleSending = () => {
     if (!project) {
-      alert("프로젝트를 선택해주세요.");
+      toast.error("프로젝트를 선택해주세요.");
       return;
     }
     if (message.length === 0) {
-      alert("메세지를 입력해주세요.");
+      toast.error("메세지를 입력해주세요.");
       return;
     }
     if (message.length > 300) {
-      alert("메세지는 300자 이내로 작성해주세요.");
+      toast.error("메세지는 300자 이내로 작성해주세요.");
       return;
     }
     sendConnection();

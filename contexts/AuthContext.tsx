@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   // ✅ logout
   const logout = useCallback(() => {
@@ -66,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const access = localStorage.getItem("accessToken");
       const refresh = localStorage.getItem("refreshToken");
 
+      console.log("Auth init:", { access, refresh });
       if (access) {
         handleSetAccessToken(access);
         setIsAuthenticated(true);

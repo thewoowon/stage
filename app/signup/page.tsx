@@ -10,6 +10,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import CopyIcon from "@/components/svg/CopyIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import customAxios from "@/lib/axios";
+import toast from "react-hot-toast";
 
 const LoaderLottie = () => {
   return (
@@ -244,6 +245,8 @@ const RuesultView = ({
     categoryName: string;
     performanceName: string;
     name: string;
+    startDate: string;
+    endDate: string;
   };
   onSelect: () => void;
 }) => {
@@ -276,7 +279,7 @@ const RuesultView = ({
           gap: 8,
         }}
       >
-        {!!searchResult.castId === null ? (
+        {!!searchResult.castId ? (
           <PortfolioBox>
             <FlexRow style={{ gap: 6 }}>
               <div
@@ -302,7 +305,8 @@ const RuesultView = ({
                 ...TYPOGRAPHY.body2["regular"],
               }}
             >
-              2023.09.21 ~ 2023.09.21
+              {searchResult.startDate || "없음"} ~{" "}
+              {searchResult.endDate || "없음"}
             </FlexRow>
             <FlexRow
               style={{
@@ -376,7 +380,7 @@ const CompletedView = ({
             <div
               onClick={() => {
                 navigator.clipboard.writeText("202857");
-                alert("코드가 복사되었습니다.");
+                toast.success("코드가 복사되었습니다.");
               }}
             >
               <CopyIcon />
@@ -398,11 +402,15 @@ const SignInPage = () => {
     categoryName: string;
     performanceName: string;
     name: string;
+    startDate: string;
+    endDate: string;
   }>({
     castId: 0,
     categoryName: "",
     performanceName: "",
     name: "",
+    startDate: "",
+    endDate: "",
   });
   const [barcode, setBarcode] = useState("");
 
@@ -468,7 +476,7 @@ const SignInPage = () => {
     }
   };
 
-  const seartchKopisInfo = async () => {
+  const searchKopisInfo = async () => {
     // API 요청 보내기
     try {
       const response = await customAxios.get("/api/kopis/getArtist", {
@@ -476,18 +484,21 @@ const SignInPage = () => {
       });
 
       if (response.status !== 200) {
-        alert("KOPIS 정보 조회에 실패했습니다. 다시 시도해주세요.");
+        toast.error("KOPIS 정보 조회에 실패했습니다. 다시 시도해주세요.");
         return;
       }
 
       const data = response.data;
+      console.log("KOPIS search result:", data);
       if (data.castId === 0) {
-        alert("KOPIS 정보가 없습니다. 이름을 다시 확인해주세요.");
+        toast.error("KOPIS 정보가 없습니다. 이름을 다시 확인해주세요.");
         setSearchResult({
           castId: 0,
           categoryName: "",
           performanceName: "",
           name: "",
+          startDate: "",
+          endDate: "",
         });
         setSignUpState("result");
         return;
@@ -498,16 +509,20 @@ const SignInPage = () => {
         categoryName: data.categoryName,
         performanceName: data.performanceName,
         name: data.name,
+        startDate: data.startDate,
+        endDate: data.endDate,
       });
       setSignUpState("result");
     } catch (error) {
       console.log("Error searching KOPIS info:", error);
-      // alert("KOPIS 정보 조회 중 오류가 발생했습니다. 다시 시도해주세요.");
+      toast.error("KOPIS 정보 조회 중 오류가 발생했습니다. 다시 시도해주세요.");
       setSearchResult({
         castId: 0,
         categoryName: "",
         performanceName: "",
         name: "",
+        startDate: "",
+        endDate: "",
       });
       setSignUpState("result");
     }
@@ -522,7 +537,9 @@ const SignInPage = () => {
       });
 
       if (response.status !== 200) {
-        alert("아티스트 스테이지 생성에 실패했습니다. 다시 시도해주세요.");
+        toast.error(
+          "아티스트 스테이지 생성에 실패했습니다. 다시 시도해주세요."
+        );
         return;
       }
 
@@ -531,7 +548,7 @@ const SignInPage = () => {
       setSignUpState("completed");
     } catch (error) {
       console.error("Error creating artist stage:", error);
-      alert(
+      toast.error(
         "아티스트 스테이지 생성 중 오류가 발생했습니다. 다시 시도해주세요."
       );
     }
@@ -543,7 +560,7 @@ const SignInPage = () => {
       const response = await customAxios.post("/api/stage/createCasterStage");
 
       if (response.status !== 200) {
-        alert("캐스터 스테이지 생성에 실패했습니다. 다시 시도해주세요.");
+        toast.error("캐스터 스테이지 생성에 실패했습니다. 다시 시도해주세요.");
         return;
       }
 
@@ -551,8 +568,8 @@ const SignInPage = () => {
       router.push("/stage");
     } catch (error) {
       console.error("Error creating artist stage:", error);
-      alert(
-        "아티스트 스테이지 생성 중 오류가 발생했습니다. 다시 시도해주세요."
+      toast.error(
+        "캐스터 스테이지 생성 중 오류가 발생했습니다. 다시 시도해주세요."
       );
     }
   };
@@ -560,7 +577,7 @@ const SignInPage = () => {
   const handleNext = async () => {
     // 일단 validation
     if (signUpState === "role" && !signUpForm.role) {
-      alert("역할을 선택해주세요.");
+      toast.error("역할을 선택해주세요.");
       return;
     }
 
@@ -571,14 +588,14 @@ const SignInPage = () => {
     }
 
     if (signUpState === "authentication" && signUpForm.name.trim() === "") {
-      alert("이름을 입력해주세요.");
+      toast.error("이름을 입력해주세요.");
       return;
     }
 
     if (signUpState === "authentication") {
       setIsLoading(true);
       setSignUpState("searching");
-      await seartchKopisInfo();
+      await searchKopisInfo();
       return;
     }
 
@@ -631,6 +648,10 @@ const SignInPage = () => {
       router.back();
     }
   };
+
+  useEffect(() => {
+    console.log("searchResult changed:", searchResult);
+  }, [searchResult]);
 
   return (
     <Container>

@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArtistDetailResponseType, SNSResponseType } from "@/type";
 import { isValidHttpsUrl } from "@/utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import toast from "react-hot-toast";
 
 const LoaderLottie = () => {
   return (
@@ -145,27 +146,27 @@ const SnsEditPage = () => {
     const types = snsSettings.map((sns) => sns.type);
     const uniqueTypes = new Set(types);
     if (types.length !== uniqueTypes.size) {
-      alert("같은 SNS 유형은 하나만 추가할 수 있습니다.");
+      toast.error("같은 SNS 유형은 하나만 추가할 수 있습니다.");
       return;
     }
     // isValidHttpsUrl
     for (const sns of snsSettings) {
       if (!sns.title || sns.title.trim() === "") {
-        alert("제목을 입력해주세요.");
+        toast.error("제목을 입력해주세요.");
         return;
       }
       if (!sns.url || sns.url.trim() === "") {
-        alert("URL을 입력해주세요.");
+        toast.error("URL을 입력해주세요.");
         return;
       }
       if (!isValidHttpsUrl(sns.url)) {
-        alert("유효한 HTTPS URL을 입력해주세요.");
+        toast.error("유효한 HTTPS URL을 입력해주세요.");
         return;
       }
     }
 
     if (!myStageData) {
-      alert("아티스트 스테이지 정보가 없습니다. 다시 시도해주세요.");
+      toast.error("아티스트 스테이지 정보가 없습니다. 다시 시도해주세요.");
       return;
     }
 
@@ -183,11 +184,11 @@ const SnsEditPage = () => {
         throw new Error("프로필 정보를 업데이트하는 데 실패했습니다.");
       }
 
-      alert("저장되었습니다.");
+      toast.success("저장되었습니다.");
       router.back();
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("프로필 정보를 업데이트하는 데 실패했습니다.");
+      toast.error("프로필 정보를 업데이트하는 데 실패했습니다.");
     }
   };
 

@@ -12,6 +12,7 @@ import customAxios from "@/lib/axios";
 import { useRef, useState } from "react";
 import DownChevronIcon from "@/components/svg/DownChevronIcon";
 import { GENRE_LIST } from "@/constants";
+import toast from "react-hot-toast";
 
 const OptionsContextMenu = ({
   open,
@@ -121,12 +122,12 @@ const ProjectCreatePage = () => {
       return response.data;
     },
     onSuccess: () => {
-      alert("프로젝트가 생성되었습니다.");
+      toast.success("프로젝트가 생성되었습니다.");
       router.push(`/stage`);
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onError: (error) => {
-      alert("프로젝트 생성에 실패했습니다.");
+      toast.error("프로젝트 생성에 실패했습니다.");
     },
   });
 
@@ -143,33 +144,33 @@ const ProjectCreatePage = () => {
 
   const handleCreate = () => {
     if (!user) {
-      alert("로그인이 필요합니다.");
+      toast.error("로그인이 필요합니다.");
       router.replace("/");
       return;
     }
 
     if (projectForm.projectName.trim() === "") {
-      alert("프로젝트명을 입력해주세요.");
+      toast.error("프로젝트명을 입력해주세요.");
       return;
     }
 
     if (projectForm.category === 0) {
-      alert("카테고리를 선택해주세요.");
+      toast.error("카테고리를 선택해주세요.");
       return;
     }
 
     if (projectForm.deadline.trim() === "") {
-      alert("마감일을 입력해주세요.");
+      toast.error("마감일을 입력해주세요.");
       return;
     }
 
     if (projectForm.company.trim() === "") {
-      alert("제작사를 입력해주세요.");
+      toast.error("제작사를 입력해주세요.");
       return;
     }
 
     if (projectForm.detailAnnouncement.trim() === "") {
-      alert("상세 공고를 입력해주세요.");
+      toast.error("상세 공고를 입력해주세요.");
       return;
     }
 

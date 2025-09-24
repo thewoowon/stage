@@ -11,6 +11,21 @@ import styled from "@emotion/styled";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+
+const LoaderLottie = () => {
+  return (
+    <DotLottieReact
+      src="/lotties/loading_gray.lottie" // public/anims/hero.lottie
+      autoplay
+      loop
+      style={{
+        width: "32px",
+        height: "32px",
+      }}
+    />
+  );
+};
 
 const SentList = ({
   category,
@@ -601,6 +616,8 @@ const ConnectionPage = () => {
     setViewMode(mode);
   };
 
+  const [isLoading, setIsLoading] = useState(false);
+
   // /api/connect/getRecvProjectList -> 아티스트가 받은 연결
   // /api/connect/getSendProjectList -> 아티스트가 보낸 연결
 
@@ -663,10 +680,12 @@ const ConnectionPage = () => {
 
   useEffect(() => {
     const getData = async () => {
+      setIsLoading(true);
       const sentData = await fetchSentList();
       setSentList(sentData);
       const receivedData = await fetchReceivedList();
       setReceivedList(receivedData);
+      setIsLoading(false);
     };
     getData();
   }, [fetchReceivedList, fetchSentList]);
@@ -710,10 +729,26 @@ const ConnectionPage = () => {
           받은 연결
         </ArtistProjectButton>
       </ArtistProjectButtonContainer>
-      {viewMode === "sent" ? (
+      {isLoading && (
+        <div
+          style={{
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <LoaderLottie />
+        </div>
+      )}
+      {!isLoading && viewMode === "sent" ? (
         <SentList category={user?.category} data={sentList} />
       ) : (
-        <ReceivedList category={user?.category} data={receivedList} />
+        !isLoading &&
+        viewMode === "received" && (
+          <ReceivedList category={user?.category} data={receivedList} />
+        )
       )}
       <GNB />
     </Container>

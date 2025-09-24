@@ -9,6 +9,7 @@ import BackgroundVideo from "@/components/module/BackgroundVideo";
 import { LogoText } from "@/components/svg";
 import SearchMainView from "@/components/view/SearchMainView";
 import { useUser } from "@/contexts/UserContext";
+import toast from "react-hot-toast";
 
 export default function Home() {
   const router = useRouter();
@@ -66,7 +67,7 @@ export default function Home() {
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      alert("로그인에 실패했습니다. 다시 시도해주세요.");
+      toast.error("로그인에 실패했습니다. 다시 시도해주세요.");
       router.replace("/");
     }
   }, [

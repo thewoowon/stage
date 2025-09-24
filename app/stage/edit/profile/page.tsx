@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import DownChevronIcon from "@/components/svg/DownChevronIcon";
 import { GENRE_LIST } from "@/constants";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import toast from "react-hot-toast";
 
 const LoaderLottie = () => {
   return (
@@ -235,53 +236,53 @@ const ProfileEditPage = () => {
       return response.data;
     },
     onSuccess: () => {
-      alert("프로필이 성공적으로 업데이트되었습니다.");
+      toast.success("프로필이 성공적으로 업데이트되었습니다.");
       router.replace("/stage");
     },
     onError: (error) => {
       console.error(error);
-      alert("프로필 업데이트 중 오류가 발생했습니다. 다시 시도해주세요.");
+      toast.error("프로필 업데이트 중 오류가 발생했습니다. 다시 시도해주세요.");
     },
   });
 
   const handleUpdate = () => {
     if (!user) {
-      alert("로그인이 필요합니다.");
+      toast.error("로그인이 필요합니다.");
       router.replace("/");
       return;
     }
     if (user.category === 1) {
       if (!artist) {
-        alert("프로필 정보를 불러오는 중입니다. 잠시만 기다려주세요.");
+        toast.error("프로필 정보를 불러오는 중입니다. 잠시만 기다려주세요.");
         return;
       }
       // 아티스트라면...
       if (!artist.name || artist.name.trim() === "") {
-        alert("이름을 입력해주세요.");
+        toast.error("이름을 입력해주세요.");
         return;
       }
       if (!artist.birthDate || artist.birthDate.trim() === "") {
-        alert("생년월일을 입력해주세요.");
+        toast.error("생년월일을 입력해주세요.");
         return;
       }
       if (!artist.height || artist.height.trim() === "") {
-        alert("신장을 입력해주세요.");
+        toast.error("신장을 입력해주세요.");
         return;
       }
       if (!artist.weight || artist.weight.trim() === "") {
-        alert("체중을 입력해주세요.");
+        toast.error("체중을 입력해주세요.");
         return;
       }
       if (affiliation === 0) {
-        alert("소속여부를 선택해주세요.");
+        toast.error("소속여부를 선택해주세요.");
         return;
       }
       if (!artist.specialty || artist.specialty.trim() === "") {
-        alert("특기를 입력해주세요.");
+        toast.error("특기를 입력해주세요.");
         return;
       }
       if (!artist.genreList || artist.genreList.length === 0) {
-        alert("분야를 선택해주세요.");
+        toast.error("분야를 선택해주세요.");
         return;
       }
 
@@ -865,7 +866,7 @@ const ProfileEditPage = () => {
         />
         <CameraIconBox
           onClick={() => {
-            alert("준비 중입니다!");
+            toast.error("준비 중입니다!");
           }}
         >
           <CameraIcon />

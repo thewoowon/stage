@@ -11,6 +11,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { ProjectExtendedResponseType } from "@/type";
 import customAxios from "@/lib/axios";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import toast from "react-hot-toast";
 
 const LoaderLottie = () => {
   return (
@@ -70,17 +71,17 @@ const ProjectConnectionPage = ({
     },
     onError: (error) => {
       console.error("Error sending connection:", error);
-      alert("연결을 보내는 중 오류가 발생했습니다. 다시 시도해주세요.");
+      toast.error("연결을 보내는 중 오류가 발생했습니다. 다시 시도해주세요.");
     },
   });
 
   const handleSending = () => {
     if (message.length === 0) {
-      alert("메세지를 입력해주세요.");
+      toast.error("메세지를 입력해주세요.");
       return;
     }
     if (message.length > 300) {
-      alert("메세지는 300자 이내로 작성해주세요.");
+      toast.error("메세지는 300자 이내로 작성해주세요.");
       return;
     }
     sendConnection();
