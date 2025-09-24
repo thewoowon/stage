@@ -140,9 +140,6 @@ const SnsEditPage = () => {
   });
 
   const handleUpdate = async () => {
-    console.log("user:", user);
-    // validation
-    // instagram, youtube 각각 1개씩만 있어야 함.
     const types = snsSettings.map((sns) => sns.type);
     const uniqueTypes = new Set(types);
     if (types.length !== uniqueTypes.size) {
@@ -352,7 +349,6 @@ const SnsEditPage = () => {
                   options={["instagram", "youtube"]}
                   selectedOption={sns.type}
                   onSelect={(option) => {
-                    console.log("select", option);
                     const newSettings = [...snsSettings];
                     newSettings[index].type = option as "instagram" | "youtube";
                     newSettings[index].contextMenuOpen = false;

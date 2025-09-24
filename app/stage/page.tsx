@@ -50,8 +50,6 @@ const StagePage = () => {
           throw new Error("프로필 정보를 가져오는 데 실패했습니다.");
         }
 
-        console.log("myStageData", response.data);
-
         return response.data;
       },
       staleTime: 5 * 60 * 1000, // 5분
@@ -73,7 +71,7 @@ const StagePage = () => {
       if (response.status !== 200) {
         throw new Error("진행중인 프로젝트 정보를 가져오는 데 실패했습니다.");
       }
-      console.log("myOpenProjectData", response.data);
+
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5분

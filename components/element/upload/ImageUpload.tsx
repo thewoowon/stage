@@ -26,7 +26,6 @@ const ImageUpload = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const encodeFileToBase64 = (fileBlob: File) => {
-    console.log("encodeFileToBase64", fileBlob);
     const reader = new FileReader();
     reader.readAsDataURL(fileBlob);
     return new Promise<void>((resolve) => {
@@ -73,7 +72,6 @@ const ImageUpload = ({
         accept="image/png, image/jpeg, image/jpg"
         onChange={async (e) => {
           setIsLoading?.(true);
-          console.log("file input change", e);
           const file = e.target.files?.[0];
           if (file) {
             // file size check 50MB

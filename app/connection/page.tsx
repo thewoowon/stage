@@ -367,14 +367,17 @@ const ReceivedList = ({
                 backgroundColor: COLORS.grayscale[500],
               }}
             >
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                sizes="100%"
-                style={{ objectFit: "cover" }}
-                priority
-              />
+              {item.image && (
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  sizes="100%"
+                  style={{ objectFit: "cover" }}
+                  priority
+                />
+              )}
+
               <div style={{ position: "absolute", top: 4, left: 4 }}>
                 {item.statusCode === 0 && <SandWatchIcon />}
                 {item.statusCode === 1 && <XWithCircleIcon />}
@@ -486,7 +489,7 @@ const ReceivedList = ({
             cursor: "pointer",
           }}
           onClick={() => {
-            router.push(`/connection/project/${item.id}/received`);
+            router.push(`/connection/artist/${item.id}/received`);
           }}
         >
           <div
@@ -497,14 +500,17 @@ const ReceivedList = ({
               backgroundColor: COLORS.grayscale[500],
             }}
           >
-            <Image
-              src={item.image}
-              alt={item.title}
-              fill
-              sizes="100%"
-              style={{ objectFit: "cover" }}
-              priority
-            />
+            {item.image && (
+              <Image
+                src={item.image}
+                alt={item.title}
+                fill
+                sizes="100%"
+                style={{ objectFit: "cover" }}
+                priority
+              />
+            )}
+
             <div style={{ position: "absolute", top: 4, left: 4 }}>
               {item.statusCode === 0 && <SandWatchIcon />}
               {item.statusCode === 1 && <XWithCircleIcon />}
@@ -625,7 +631,6 @@ const ConnectionPage = () => {
   // /api/connect/getSendArtistList -> 캐스터가 보낸 연결
 
   const fetchSentList = useCallback(async () => {
-    console.log("Fetching sent list for user:", user);
     if (!user) return;
     if (user.category === 1) {
       // 아티스트
@@ -636,13 +641,10 @@ const ConnectionPage = () => {
         return [];
       }
 
-      console.log("Sent project list response data:", response.data);
       return response.data;
     } else {
       // 캐스터
       const response = await customAxios.get("/api/connect/getSendArtistList");
-
-      console.log("Sent artist list response data:", response.data);
 
       if (response.status !== 200) {
         console.error("Failed to fetch sent artist list:", response);

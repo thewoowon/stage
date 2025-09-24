@@ -161,6 +161,7 @@ const ProfileEditPage = () => {
     artistList: [],
     image: "",
   });
+  const [caster, setCaster] = useState<string>("");
   const [contextMenuOpen1, setContextMenuOpen1] = useState(false);
   const [contextMenuOpen2, setContextMenuOpen2] = useState(false);
   // 소속여부
@@ -245,6 +246,43 @@ const ProfileEditPage = () => {
     },
   });
 
+  const { mutate: mutateCaster } = useMutation({
+    mutationFn: async (artistData: ArtistDetailResponseType) => {
+      const formData = new FormData();
+      formData.append("file", file as File);
+      formData.append(
+        "stageData",
+        JSON.stringify({
+          name: artistData.name || "",
+          affiliation: caster || "",
+        })
+      );
+
+      const response = await customAxios.put(
+        "/api/stage/updateStage",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.status !== 200) {
+        throw new Error("프로필 업데이트에 실패했습니다.");
+      }
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("프로필이 성공적으로 업데이트되었습니다.");
+      router.replace("/stage");
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error("프로필 업데이트 중 오류가 발생했습니다. 다시 시도해주세요.");
+    },
+  });
+
   const handleUpdate = () => {
     if (!user) {
       toast.error("로그인이 필요합니다.");
@@ -288,7 +326,11 @@ const ProfileEditPage = () => {
 
       mutateArtist(artist);
     } else if (user.category === 2) {
-      // 캐스터라면...
+      if (!caster || caster.trim() === "") {
+        toast.error("소속을 입력해주세요.");
+        return;
+      }
+      mutateCaster(artist);
     } else {
       console.error("알 수 없는 사용자 카테고리:", user.category);
       return;
@@ -864,9 +906,29 @@ const ProfileEditPage = () => {
             }
           }}
         />
+        {myUploadUrl ? (
+          <Image
+            src={myUploadUrl}
+            alt={"Uploaded Image"}
+            fill
+            sizes="100%"
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        ) : artist.image ? (
+          <Image
+            src={artist.image}
+            alt={"Profile Image"}
+            fill
+            sizes="100%"
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        ) : null}
         <CameraIconBox
-          onClick={() => {
-            toast.error("준비 중입니다!");
+          onClick={(e) => {
+            e.stopPropagation();
+            inputRef.current?.click();
           }}
         >
           <CameraIcon />
@@ -947,10 +1009,9 @@ const ProfileEditPage = () => {
                 paddingLeft: "10px",
               }}
               placeholder="소속을 입력해주세요"
-              value={""}
+              value={caster}
               onChange={(e) => {
-                console.log(e.target.value);
-                return;
+                setCaster(e.target.value);
               }}
             />
           </FlexRow>

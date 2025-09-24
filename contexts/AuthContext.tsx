@@ -66,7 +66,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const access = localStorage.getItem("accessToken");
       const refresh = localStorage.getItem("refreshToken");
 
-      console.log("Auth init:", { access, refresh });
       if (access) {
         handleSetAccessToken(access);
         setIsAuthenticated(true);

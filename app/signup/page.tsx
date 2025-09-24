@@ -489,7 +489,6 @@ const SignInPage = () => {
       }
 
       const data = response.data;
-      console.log("KOPIS search result:", data);
       if (data.castId === 0) {
         toast.error("KOPIS 정보가 없습니다. 이름을 다시 확인해주세요.");
         setSearchResult({
@@ -514,7 +513,6 @@ const SignInPage = () => {
       });
       setSignUpState("result");
     } catch (error) {
-      console.log("Error searching KOPIS info:", error);
       toast.error("KOPIS 정보 조회 중 오류가 발생했습니다. 다시 시도해주세요.");
       setSearchResult({
         castId: 0,
@@ -648,11 +646,7 @@ const SignInPage = () => {
       router.back();
     }
   };
-
-  useEffect(() => {
-    console.log("searchResult changed:", searchResult);
-  }, [searchResult]);
-
+  
   return (
     <Container>
       <ShadowHeader>

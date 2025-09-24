@@ -8,8 +8,9 @@ import { useRouter } from "next/navigation";
 import { use, useState } from "react";
 import { LeftChevronIcon } from "@/components/svg";
 import { useQuery } from "@tanstack/react-query";
-import { ProjectExtendedResponseType } from "@/type";
+import { ProjectConnectedResponseType } from "@/type";
 import customAxios from "@/lib/axios";
+import { GENRE_LIST } from "@/constants";
 
 const ProjectConnectionPage = ({
   params,
@@ -21,11 +22,11 @@ const ProjectConnectionPage = ({
   const [message, setMessage] = useState("");
 
   const { data: projectData, isLoading: projectIsLoading } =
-    useQuery<ProjectExtendedResponseType>({
-      queryKey: ["project", id],
+    useQuery<ProjectConnectedResponseType>({
+      queryKey: ["connected", "project", "received", id],
       queryFn: async () => {
-        const response = await customAxios.get(`/api/project/getProject`, {
-          params: { projectId: id },
+        const response = await customAxios.get(`/api/connect/getProject`, {
+          params: { connectId: id },
         });
 
         if (response.status !== 200) {
@@ -56,8 +57,8 @@ const ProjectConnectionPage = ({
               color: "#111111",
             }}
           >
-            제안 메세지를 작성해 <br />
-            연결을 보내보세요
+            {projectData?.name || ""}님이 보내온 <br />
+            연결을 확인해보세요
           </Title>
         </div>
         <div
@@ -89,7 +90,9 @@ const ProjectConnectionPage = ({
                     padding: "2px 6px",
                   }}
                 >
-                  {projectData?.genre.genreName}
+                  {GENRE_LIST.find(
+                    (genre) => genre.genreId === Number(projectData?.genre)
+                  )?.genreName || "기타"}
                 </span>
               </div>
             </Flex>
@@ -169,8 +172,10 @@ const ProjectConnectionPage = ({
           >
             <TextArea
               placeholder="메세지를 입력해주세요"
-              value={message}
+              value={projectData?.message || ""}
+              maxLength={300}
               onChange={(e) => setMessage(e.target.value)}
+              disabled
             />
             <div
               style={{

@@ -519,7 +519,6 @@ const SearchMainView = () => {
             options={SORT_OPTIONS}
             selectedOption={sortOption}
             onSelect={(option) => {
-              console.log("select", option);
               setSortOption(option);
               setContextMenuOpen(false);
             }}

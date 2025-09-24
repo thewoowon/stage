@@ -129,6 +129,17 @@ type ArtistListResponseType = {
   stageList: ArtistResponseType[];
 };
 
+type ArtistConnectedResponseType = {
+  id: number;
+  name: string;
+  birthDate: string;
+  weight: number;
+  height: number;
+  specialty: string;
+  genreList: string[];
+  message: string;
+};
+
 type ProjectResponseType = {
   id: number;
   title: string;
@@ -149,6 +160,16 @@ type ProjectExtendedResponseType = {
   company: string;
   name: string;
   content: string;
+};
+
+type ProjectConnectedResponseType = {
+  id: number;
+  name: string;
+  genre: string;
+  endDate: string;
+  title: string;
+  company: string;
+  message: string;
 };
 
 type ProjectListResponseType = {
@@ -230,4 +251,6 @@ export type {
   SNSResponseType,
   PortfolioResponseType,
   SimpleArtistResponseType,
+  ProjectConnectedResponseType,
+  ArtistConnectedResponseType,
 };

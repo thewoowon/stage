@@ -27,7 +27,6 @@ export default function Home() {
 
   // ✅ 서버에서 Access Token 발급
   const getAccessToken = useCallback(async () => {
-    console.log("getAccessToken 호출됨");
     if (!code) return;
     try {
       const response = await customAxios.get("/api/token/token", {
@@ -86,14 +85,9 @@ export default function Home() {
 
   useEffect(() => {
     if (code) {
-      console.log("code:", code);
       getAccessToken();
     }
   }, [code, getAccessToken]);
-
-  useEffect(() => {
-    console.log("Auth/user changed:", isAuthenticated, user);
-  }, [isAuthenticated, user]);
 
   if (isAuthenticated && user) {
     return <SearchMainView />;

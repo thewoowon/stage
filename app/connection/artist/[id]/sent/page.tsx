@@ -6,11 +6,29 @@ import { useUser } from "@/contexts/UserContext";
 import customAxios from "@/lib/axios";
 import { COLORS } from "@/styles/color";
 import { TYPOGRAPHY } from "@/styles/typography";
-import { ArtistDetailResponseType } from "@/type";
+import {
+  ArtistConnectedResponseType,
+  ProjectConnectedResponseType,
+} from "@/type";
 import styled from "@emotion/styled";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+
+const LoaderLottie = () => {
+  return (
+    <DotLottieReact
+      src="/lotties/loading_gray.lottie" // public/anims/hero.lottie
+      autoplay
+      loop
+      style={{
+        width: "32px",
+        height: "32px",
+      }}
+    />
+  );
+};
 
 const SortOptionsContextMenu = ({
   open,
@@ -85,71 +103,63 @@ const ArtistConnectionPage = ({
   const [message, setMessage] = useState("");
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
 
-  const { data, isLoading } = useQuery<ArtistDetailResponseType>({
-    queryKey: ["artist", id],
-    queryFn: async () => {
-      const response = await customAxios.get(`/api/stage/getStage`, {
-        params: { stageId: id },
-      });
+  const { data: artistData, isLoading: artistIsLoading } =
+    useQuery<ArtistConnectedResponseType>({
+      queryKey: ["connected", "artist", "received", id],
+      queryFn: async () => {
+        const response = await customAxios.get(`/api/connect/getArtist`, {
+          params: { connectId: id },
+        });
 
-      if (response.status !== 200) {
-        throw new Error("Network response was not ok");
-      }
+        if (response.status !== 200) {
+          throw new Error("Network response was not ok");
+        }
 
-      return response.data;
-    },
-    enabled: !!id,
-  });
+        return response.data;
+      },
+      enabled: !!id,
+    });
 
-  // 캐스터가 진행중인 프로젝트
-  const { data: ongoingProjects } = useQuery<
-    {
-      id: number;
-      title: string;
-      image: string;
-      genre: string;
-      endDate: string;
-    }[]
-  >({
-    queryKey: ["ongoingProjects", user?.id],
-    queryFn: async () => {
-      const response = await customAxios.get(
-        "/api/project/getMyOpenProjectList"
-      );
+  const { data: projectData, isLoading: projectIsLoading } =
+    useQuery<ProjectConnectedResponseType>({
+      queryKey: ["connected", "project", "received", id],
+      queryFn: async () => {
+        const response = await customAxios.get(`/api/connect/getProject`, {
+          params: { connectId: id },
+        });
 
-      if (response.status !== 200) {
-        throw new Error("Network response was not ok");
-      }
+        if (response.status !== 200) {
+          throw new Error("Network response was not ok");
+        }
 
-      return response.data;
-    },
-    // 캐스터만 가능하게 해야함.
-    enabled: !!user?.id && user?.category === 2,
-  });
+        return response.data;
+      },
+      enabled: !!id,
+    });
 
-  if (!data || isLoading) {
+  if (artistIsLoading || projectIsLoading) {
     return (
       <Container>
-        <div style={{ flex: 1, width: "100%" }}>
-          <HeaderWithTitle>
-            <div
-              onClick={() => router.back()}
-              style={{ cursor: "pointer", position: "absolute", left: 16 }}
-            >
-              <LeftChevronIcon fill="#111111" />
-            </div>
-            <div>연결 상세</div>
-          </HeaderWithTitle>
+        <HeaderWithTitle>
           <div
-            style={{ padding: "0 16px", width: "100%", marginBottom: "40px" }}
+            onClick={() => router.back()}
+            style={{ cursor: "pointer", position: "absolute", left: 16 }}
           >
-            <Title
-              style={{
-                ...TYPOGRAPHY.h3["bold"],
-                color: "#111111",
-              }}
-            ></Title>
+            <LeftChevronIcon fill="#111111" />
           </div>
+          <div>연결 상세</div>
+        </HeaderWithTitle>
+        <div
+          style={{
+            width: "100%",
+            flex: 1,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingBottom: "100px",
+          }}
+        >
+          <LoaderLottie />
         </div>
       </Container>
     );
@@ -174,8 +184,8 @@ const ArtistConnectionPage = ({
               color: "#111111",
             }}
           >
-            제안 메세지를 작성해 <br />
-            연결을 보내보세요
+            {artistData?.name}님에게 보낸 <br />
+            연결을 확인해보세요
           </Title>
         </div>
         <div
@@ -198,7 +208,7 @@ const ArtistConnectionPage = ({
               >
                 이름
               </div>
-              <div>{data.name}</div>
+              <div>{artistData?.name}</div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
               <div
@@ -211,7 +221,9 @@ const ArtistConnectionPage = ({
                 생년
               </div>
               <div>
-                {data.birthDate ? data.birthDate.slice(0, 10) : "알 수 없음"}
+                {artistData?.birthDate
+                  ? artistData?.birthDate.slice(0, 10)
+                  : "알 수 없음"}
               </div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
@@ -224,7 +236,9 @@ const ArtistConnectionPage = ({
               >
                 신장
               </div>
-              <div>{data.weight ? `${data.weight} cm` : "알 수 없음"}</div>
+              <div>
+                {artistData?.height ? `${artistData.height} cm` : "알 수 없음"}
+              </div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
               <div
@@ -236,7 +250,9 @@ const ArtistConnectionPage = ({
               >
                 체중
               </div>
-              <div>{data.weight ? `${data.weight} kg` : "알 수 없음"}</div>
+              <div>
+                {artistData?.weight ? `${artistData.weight} kg` : "알 수 없음"}
+              </div>
             </Flex>
             <Flex style={{ ...TYPOGRAPHY.body2["regular"] }}>
               <div
@@ -249,8 +265,8 @@ const ArtistConnectionPage = ({
                 특기
               </div>
               <div>
-                {Array.isArray(data.specialty)
-                  ? data.specialty.join(", ")
+                {Array.isArray(artistData?.specialty)
+                  ? artistData.specialty.join(", ")
                   : "없음"}
               </div>
             </Flex>
@@ -265,9 +281,10 @@ const ArtistConnectionPage = ({
                 분야
               </div>
               <div style={{ display: "flex", gap: 6 }}>
-                {data.genreList.length === 0 && "없음"}
-                {data.genreList.length > 0 &&
-                  data.genreList.map((genre, index) => (
+                {artistData && artistData.genreList.length === 0 && "없음"}
+                {artistData &&
+                  artistData.genreList.length > 0 &&
+                  artistData.genreList.map((genre, index) => (
                     <span
                       key={index}
                       style={{
@@ -277,7 +294,7 @@ const ArtistConnectionPage = ({
                         padding: "2px 6px",
                       }}
                     >
-                      {genre.genreName}
+                      {genre}
                     </span>
                   ))}
               </div>
@@ -313,21 +330,9 @@ const ArtistConnectionPage = ({
                 ...TYPOGRAPHY.body2["regular"],
               }}
             >
-              {project || "선택"}
+              {projectData?.title || "선택"}
             </div>
             <DownChevronIcon />
-            <SortOptionsContextMenu
-              open={contextMenuOpen}
-              options={ongoingProjects?.map((proj) => proj.title) || []}
-              selectedOption={project}
-              onSelect={(option) => {
-                setProject(option);
-                setContextMenuOpen(false);
-              }}
-              onClose={() => {
-                setContextMenuOpen(false);
-              }}
-            />
           </FlexRow>
         </div>
         <div style={{ padding: "0px 16px", width: "100%" }}>
@@ -350,8 +355,9 @@ const ArtistConnectionPage = ({
           >
             <TextArea
               placeholder="메세지를 입력해주세요"
-              value={message}
+              value={artistData?.message || ""}
               onChange={(e) => setMessage(e.target.value)}
+              disabled
             />
             <div
               style={{
