@@ -2,14 +2,15 @@
 import styled from "@emotion/styled";
 import { COLORS } from "@/styles/color";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import customAxios from "@/lib/axios";
-import { useAuth } from "@/contexts/AuthContext"; // ✅ Context 기반
+import { useAuth } from "@/contexts/AuthContext";
 import BackgroundVideo from "@/components/module/BackgroundVideo";
 import { LogoText } from "@/components/svg";
 import SearchMainView from "@/components/view/SearchMainView";
 import { useUser } from "@/contexts/UserContext";
 import toast from "react-hot-toast";
+import axios from "axios";
 
 export default function Home() {
   const router = useRouter();
@@ -17,7 +18,6 @@ export default function Home() {
   const code = params.get("code");
   const { user, setUser } = useUser();
 
-  // ✅ AuthContext 훅 사용
   const {
     setAccessToken,
     isAuthenticated,
@@ -25,52 +25,77 @@ export default function Home() {
     setRefreshToken,
   } = useAuth();
 
-  // ✅ 서버에서 Access Token 발급
+  const [isProcessing, setIsProcessing] = useState(false); // ✅ 루프 방지용 플래그
+
   const getAccessToken = useCallback(async () => {
-    if (!code) return;
+    if (!code || isProcessing) return;
+    setIsProcessing(true);
+
     try {
       const response = await customAxios.get("/api/token/token", {
         params: { code },
       });
 
       if (response.status === 200) {
-        const accessToken = response.headers["accesstoken"];
-        const refreshToken = response.headers["refreshtoken"];
+        const accessToken =
+          response.headers["accesstoken"] ||
+          response.headers["AccessToken"] ||
+          response.headers["access-token"]; // ✅ 케이스 대응
+        const refreshToken =
+          response.headers["refreshtoken"] ||
+          response.headers["RefreshToken"] ||
+          response.headers["refresh-token"];
+
+        if (!accessToken || !refreshToken) {
+          toast.error("토큰을 가져오지 못했습니다.");
+          router.replace("/");
+          return;
+        }
 
         const userInfoResponse = await customAxios.get(
           "/api/user/getUserInfo",
           {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+            headers: { Authorization: `Bearer ${accessToken}` },
           }
         );
 
         if (userInfoResponse.status === 200) {
           const userInfo = userInfoResponse.data;
-          console.log("userInfo:", userInfo);
           if (!userInfo.category) {
+            // ✅ 최초 회원가입 단계
+            setAccessToken(accessToken);
+            setRefreshToken(refreshToken);
+            setIsAuthenticated(true);
+            setUser(userInfo);
             router.replace("/signup");
             return;
           }
+
+          // ✅ 정상 로그인 처리
           setAccessToken(accessToken);
-          setRefreshToken(refreshToken); // ✅ localStorage도 자동 반영됨
+          setRefreshToken(refreshToken);
           setIsAuthenticated(true);
           setUser(userInfo);
+          // code 쿼리 제거 후 홈 이동 (무한 루프 방지)
           router.replace("/");
         }
       } else {
         console.error("로그인 실패:", response);
-        return router.replace("/");
+        router.replace("/");
       }
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      toast.error("로그인에 실패했습니다. 다시 시도해주세요.");
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data.message || "로그인에 실패했습니다.");
+      } else {
+        toast.error("로그인에 실패했습니다. 다시 시도해주세요.");
+      }
       router.replace("/");
+    } finally {
+      setIsProcessing(false);
     }
   }, [
     code,
+    isProcessing,
     router,
     setAccessToken,
     setIsAuthenticated,
@@ -85,9 +110,10 @@ export default function Home() {
 
   useEffect(() => {
     if (code) {
-      getAccessToken();
+      void getAccessToken();
     }
-  }, [code, getAccessToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]); // ✅ code만 감시 (getAccessToken 의존성 제거)
 
   if (isAuthenticated && user) {
     return <SearchMainView />;
@@ -135,7 +161,7 @@ const Container = styled.main`
     display: none;
   }
   scrollbar-width: none;
-  -ms-overflow-style: none; /* IE and Edge */
+  -ms-overflow-style: none;
 `;
 
 const ButtonBox = styled.div`
