@@ -41,6 +41,8 @@ const StagePage = () => {
   const [imageOverlayVisible, setImageOverlayVisible] = useState(false);
   const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
 
+  console.log("user", user);
+
   const { data: myStageData, isLoading: isMyStageLoading } =
     useQuery<ArtistDetailResponseType>({
       queryKey: ["myStage"],
