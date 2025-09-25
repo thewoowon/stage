@@ -144,6 +144,7 @@ const ArtistList = ({
 };
 
 const ArtistCard = ({ artist }: { artist: ArtistResponseType }) => {
+  console.log(artist);
   const router = useRouter();
   return (
     <ArtistCardContainer
@@ -178,7 +179,7 @@ const ArtistCard = ({ artist }: { artist: ArtistResponseType }) => {
         }}
       >
         <div>
-          {artist.categories?.map((category, index) => (
+          {artist.categoryList?.map((category, index) => (
             <span
               key={index}
               style={{
@@ -209,7 +210,7 @@ const ArtistCard = ({ artist }: { artist: ArtistResponseType }) => {
             color: COLORS.grayscale[700],
           }}
         >
-          {artist.level || "Unknown"} / {artist.finalScore || 0}
+          {artist.level || "Unknown"} / {artist.score || 0}
         </div>
       </div>
     </ArtistCardContainer>

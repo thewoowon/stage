@@ -465,14 +465,14 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       padding: "2px 6px",
                     }}
                   >
-                    연극
+                    {portfolio.category.genreName || "분야 없음"}
                   </div>
                   <div
                     style={{
                       ...TYPOGRAPHY.body2["semiBold"],
                     }}
                   >
-                    공연명
+                    {portfolio.title || "공연명"}
                   </div>
                 </FlexRow>
                 <FlexRow
@@ -480,14 +480,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     ...TYPOGRAPHY.body2["regular"],
                   }}
                 >
-                  2023.09.21 ~ 2023.09.21
-                </FlexRow>
-                <FlexRow
-                  style={{
-                    ...TYPOGRAPHY.body2["regular"],
-                  }}
-                >
-                  공연장명: 대학로 아트홀
+                  {portfolio.startDate} ~ {portfolio.endDate}
                 </FlexRow>
               </PortfolioBox>
             ))}

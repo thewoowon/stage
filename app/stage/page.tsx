@@ -459,14 +459,14 @@ const StagePage = () => {
                           padding: "2px 6px",
                         }}
                       >
-                        연극
+                        {portfolio.category.genreName || "분야 없음"}
                       </div>
                       <div
                         style={{
                           ...TYPOGRAPHY.body2["semiBold"],
                         }}
                       >
-                        공연명
+                        {portfolio.title}
                       </div>
                     </FlexRow>
                     <FlexRow
@@ -475,13 +475,14 @@ const StagePage = () => {
                       }}
                     >
                       2023.09.21 ~ 2023.09.21
+                      {portfolio.startDate} ~ {portfolio.endDate}
                     </FlexRow>
                     <FlexRow
                       style={{
                         ...TYPOGRAPHY.body2["regular"],
                       }}
                     >
-                      공연장명: 대학로 아트홀
+                      공연장명: {portfolio.title || ""}
                     </FlexRow>
                   </PortfolioBox>
                 ))}
@@ -699,14 +700,14 @@ const StagePage = () => {
                         padding: "2px 6px",
                       }}
                     >
-                      연극
+                      {project.genre || "분야 없음"}
                     </div>
                     <div
                       style={{
                         ...TYPOGRAPHY.body2["semiBold"],
                       }}
                     >
-                      공연명
+                      {project.title || "공연명"}
                     </div>
                   </FlexRow>
                   <FlexRow
@@ -714,14 +715,7 @@ const StagePage = () => {
                       ...TYPOGRAPHY.body2["regular"],
                     }}
                   >
-                    2023.09.21 ~ 2023.09.21
-                  </FlexRow>
-                  <FlexRow
-                    style={{
-                      ...TYPOGRAPHY.body2["regular"],
-                    }}
-                  >
-                    공연장명: 대학로 아트홀
+                    {project.endDate || "2023.09.21"}
                   </FlexRow>
                 </PortfolioBox>
               ))}
@@ -760,14 +754,14 @@ const StagePage = () => {
                         padding: "2px 6px",
                       }}
                     >
-                      연극
+                      {project.genre || "분야 없음"}
                     </div>
                     <div
                       style={{
                         ...TYPOGRAPHY.body2["semiBold"],
                       }}
                     >
-                      공연명
+                      {project.title || "공연명"}
                     </div>
                   </FlexRow>
                   <FlexRow
@@ -775,14 +769,7 @@ const StagePage = () => {
                       ...TYPOGRAPHY.body2["regular"],
                     }}
                   >
-                    2023.09.21 ~ 2023.09.21
-                  </FlexRow>
-                  <FlexRow
-                    style={{
-                      ...TYPOGRAPHY.body2["regular"],
-                    }}
-                  >
-                    공연장명: 대학로 아트홀
+                    {project.endDate || "2023.09.21"}
                   </FlexRow>
                 </PortfolioBox>
               ))}

@@ -247,6 +247,7 @@ const RuesultView = ({
     name: string;
     startDate: string;
     endDate: string;
+    hallName: string;
   };
   onSelect: () => void;
 }) => {
@@ -313,7 +314,7 @@ const RuesultView = ({
                 ...TYPOGRAPHY.body2["regular"],
               }}
             >
-              공연장명: {searchResult.name || "없음"}
+              공연장명: {searchResult.hallName || "없음"}
             </FlexRow>
           </PortfolioBox>
         ) : (
@@ -404,6 +405,7 @@ const SignInPage = () => {
     name: string;
     startDate: string;
     endDate: string;
+    hallName: string;
   }>({
     castId: 0,
     categoryName: "",
@@ -411,6 +413,7 @@ const SignInPage = () => {
     name: "",
     startDate: "",
     endDate: "",
+    hallName: "",
   });
   const [barcode, setBarcode] = useState("");
 
@@ -498,6 +501,7 @@ const SignInPage = () => {
           name: "",
           startDate: "",
           endDate: "",
+          hallName: "",
         });
         setSignUpState("result");
         return;
@@ -510,6 +514,7 @@ const SignInPage = () => {
         name: data.name,
         startDate: data.startDate,
         endDate: data.endDate,
+        hallName: data.hallName,
       });
       setSignUpState("result");
     } catch (error) {
@@ -521,6 +526,7 @@ const SignInPage = () => {
         name: "",
         startDate: "",
         endDate: "",
+        hallName: "",
       });
       setSignUpState("result");
     }
@@ -646,7 +652,7 @@ const SignInPage = () => {
       router.back();
     }
   };
-  
+
   return (
     <Container>
       <ShadowHeader>
