@@ -115,7 +115,7 @@ declare global {
 type ArtistResponseType = {
   id: number;
   name: string;
-  score: string;
+  finalScore: string;
   level: string;
   image: string;
   categoryList: {

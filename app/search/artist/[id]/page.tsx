@@ -116,6 +116,10 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [imageOverlayVisible, setImageOverlayVisible] = useState(false);
   const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
 
+  const [thumbnails, setThumbnails] = useState<Record<string, string | null>>(
+    {}
+  );
+
   const { data, isLoading } = useQuery<ArtistDetailResponseType>({
     queryKey: ["artist", id],
     queryFn: async () => {
@@ -141,6 +145,28 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
       setOpen(true);
     }
   }, [status]);
+
+  // ✅ 썸네일 가져오기 함수
+  async function fetchPreview(url: string) {
+    const res = await fetch(`/api/preview?url=${encodeURIComponent(url)}`);
+    return res.json();
+  }
+
+  // ✅ SNS 리스트에 있는 링크들 한번에 처리
+  useEffect(() => {
+    if (!data?.snsList) return;
+
+    (async () => {
+      const results: Record<string, string | null> = {};
+      await Promise.all(
+        data.snsList.map(async (sns) => {
+          const preview = await fetchPreview(sns.url);
+          results[sns.id] = preview.valid ? preview.thumbnail : null;
+        })
+      );
+      setThumbnails(results);
+    })();
+  }, [data?.snsList]);
 
   if (isLoading) {
     return (
@@ -347,6 +373,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           {data &&
             data.snsList.length > 0 &&
             data.snsList.map((sns) => {
+              const thumbnail = thumbnails[sns.id];
               if (sns.type === "1") {
                 return (
                   <SnsCard key={sns.id}>
@@ -357,14 +384,14 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         height: "210px",
                         backgroundColor: COLORS.grayscale[500],
                       }}
-                      // onClick={() => {
-                      //   setImageOverlayVisible(true);
-                      // }}
+                      onClick={() => {
+                        setImageOverlayVisible(true);
+                      }}
                     >
-                      {sns.url && (
+                      {thumbnail && (
                         <Image
-                          src={sns.url}
-                          alt="Instagram"
+                          src={thumbnail}
+                          alt={sns.type}
                           fill
                           sizes="100%"
                           style={{ objectFit: "cover" }}
@@ -408,9 +435,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         height: "210px",
                         backgroundColor: COLORS.grayscale[500],
                       }}
-                      // onClick={() => {
-                      //   setVideoOverlayVisible(true);
-                      // }}
+                      onClick={() => {
+                        setVideoOverlayVisible(true);
+                      }}
                     >
                       {sns.url && (
                         <Image
@@ -546,14 +573,19 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
           </ShadowHeader>
           <div style={{ width: "100%", height: "100%" }}>
-            <Image
-              src="/images/oblong-profiles/women/woman-1.png"
-              alt="Profile"
-              fill
-              sizes="100%"
-              style={{ objectFit: "contain" }}
-              priority
-            />
+            {thumbnails && Object.values(thumbnails).length > 0 && (
+              <Image
+                src={
+                  Object.values(thumbnails).find((thumb) => thumb !== null) ||
+                  ""
+                }
+                alt="Profile"
+                fill
+                sizes="100%"
+                style={{ objectFit: "contain" }}
+                priority
+              />
+            )}
           </div>
         </ImageOverlay>
       )}
