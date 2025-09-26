@@ -374,109 +374,65 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             data.snsList.length > 0 &&
             data.snsList.map((sns) => {
               const thumbnail = thumbnails[sns.id];
-              if (sns.type === "1") {
-                return (
-                  <SnsCard key={sns.id}>
+              return (
+                <SnsCard
+                  key={sns.id}
+                  onClick={() => {
+                    if (!sns.url) return;
+                    if (sns.type === "youtube") {
+                      setVideoOverlayVisible(true);
+                    }
+                    if (sns.type === "instagram") {
+                      setImageOverlayVisible(true);
+                    }
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "190px",
+                      height: "210px",
+                      backgroundColor: COLORS.grayscale[500],
+                    }}
+                  >
+                    {thumbnail && (
+                      <Image
+                        src={thumbnail}
+                        alt={sns.type}
+                        fill
+                        sizes="100%"
+                        style={{ objectFit: "cover" }}
+                        priority
+                      />
+                    )}
+                  </div>
+                  <FlexRow
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      justifyContent: "space-between",
+                    }}
+                  >
                     <div
                       style={{
-                        position: "relative",
-                        width: "190px",
-                        height: "210px",
-                        backgroundColor: COLORS.grayscale[500],
-                      }}
-                      onClick={() => {
-                        setImageOverlayVisible(true);
+                        ...TYPOGRAPHY.body2["regular"],
                       }}
                     >
-                      {thumbnail && (
-                        <Image
-                          src={thumbnail}
-                          alt={sns.type}
-                          fill
-                          sizes="100%"
-                          style={{ objectFit: "cover" }}
-                          priority
-                        />
-                      )}
+                      Youtube
                     </div>
-                    <FlexRow
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        justifyContent: "space-between",
-                      }}
+                    <div
+                      onClick={() => router.push(sns.url)}
+                      style={{ cursor: "pointer" }}
                     >
-                      <div
-                        style={{
-                          ...TYPOGRAPHY.body2["regular"],
-                        }}
-                      >
-                        Youtube
-                      </div>
-                      <div
-                        onClick={() => {
-                          if (sns.url === "https://") return;
-                          if (!sns.url) return;
-                          router.push(sns.url || "");
-                        }}
-                      >
+                      {sns.type === "youtube" ? (
                         <YoutubeIcon width={20} height={20} />
-                      </div>
-                    </FlexRow>
-                  </SnsCard>
-                );
-              } else {
-                return (
-                  <SnsCard key={sns.id}>
-                    <div
-                      style={{
-                        position: "relative",
-                        width: "190px",
-                        height: "210px",
-                        backgroundColor: COLORS.grayscale[500],
-                      }}
-                      onClick={() => {
-                        setVideoOverlayVisible(true);
-                      }}
-                    >
-                      {sns.url && (
-                        <Image
-                          src={sns.url}
-                          alt="Instagram"
-                          fill
-                          sizes="100%"
-                          style={{ objectFit: "cover" }}
-                          priority
-                        />
+                      ) : (
+                        <InstagramIcon width={20} height={20} />
                       )}
                     </div>
-                    <FlexRow
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <div
-                        style={{
-                          ...TYPOGRAPHY.body2["regular"],
-                        }}
-                      >
-                        Instagram
-                      </div>
-                      <div
-                        onClick={() => {
-                          if (sns.url === "https://") return;
-                          if (!sns.url) return;
-                          router.push(sns.url || "");
-                        }}
-                      >
-                        <InstagramIcon width={20} height={20} />
-                      </div>
-                    </FlexRow>
-                  </SnsCard>
-                );
-              }
+                  </FlexRow>
+                </SnsCard>
+              );
             })}
         </HorizontalThemeScrollContainer>
       </div>

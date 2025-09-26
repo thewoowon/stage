@@ -374,9 +374,13 @@ const StagePage = () => {
                     <SnsCard
                       key={sns.id}
                       onClick={() => {
-                        // setImageOverlayVisible(true);
-                        // setVideoOverlayVisible(true);
-                        return;
+                        if (!sns.url) return;
+                        if (sns.type === "youtube") {
+                          setVideoOverlayVisible(true);
+                        }
+                        if (sns.type === "instagram") {
+                          setImageOverlayVisible(true);
+                        }
                       }}
                     >
                       <div
