@@ -201,6 +201,16 @@ type PortfolioResponseType = {
   };
 };
 
+type KopisHistoryRespnseType = {
+  castId: number;
+  categoryNm: string;
+  performanceName: string;
+  hallName: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+};
+
 type SimpleArtistResponseType = {
   score: string;
   grade: string;
@@ -224,7 +234,7 @@ type ArtistDetailResponseType = {
   specialty: string;
   genreList: GenreResponseType[];
   snsList: SNSResponseType[];
-  portfolioList: PortfolioResponseType[];
+  kopisHistoryList: KopisHistoryRespnseType[];
   artistList: SimpleArtistResponseType[];
   image: string;
 };
@@ -250,6 +260,7 @@ export type {
   GenreResponseType,
   SNSResponseType,
   PortfolioResponseType,
+  KopisHistoryRespnseType,
   SimpleArtistResponseType,
   ProjectConnectedResponseType,
   ArtistConnectedResponseType,

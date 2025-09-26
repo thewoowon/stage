@@ -144,7 +144,6 @@ const ArtistList = ({
 };
 
 const ArtistCard = ({ artist }: { artist: ArtistResponseType }) => {
-  console.log(artist);
   const router = useRouter();
   return (
     <ArtistCardContainer

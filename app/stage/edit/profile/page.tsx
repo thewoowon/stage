@@ -157,7 +157,7 @@ const ProfileEditPage = () => {
     specialty: "",
     genreList: [],
     snsList: [],
-    portfolioList: [],
+    kopisHistoryList: [],
     artistList: [],
     image: "",
   });
@@ -356,7 +356,7 @@ const ProfileEditPage = () => {
         genreList: myStageData.genreList || [],
         image: myStageData.image || "",
         snsList: myStageData.snsList || [],
-        portfolioList: myStageData.portfolioList || [],
+        kopisHistoryList: myStageData.kopisHistoryList || [],
         artistList: myStageData.artistList || [],
       });
     }

@@ -444,11 +444,11 @@ const StagePage = () => {
                 gap: 8,
               }}
             >
-              {(myStageData?.portfolioList || []).length === 0 && "없음"}
+              {(myStageData?.kopisHistoryList || []).length === 0 && "없음"}
               {myStageData &&
-                (myStageData?.portfolioList || []).length > 0 &&
-                myStageData?.portfolioList.map((portfolio) => (
-                  <PortfolioBox key={portfolio.id}>
+                (myStageData?.kopisHistoryList || []).length > 0 &&
+                myStageData?.kopisHistoryList.map((portfolio) => (
+                  <PortfolioBox key={portfolio.castId}>
                     <FlexRow style={{ gap: 6 }}>
                       <div
                         style={{
@@ -458,14 +458,14 @@ const StagePage = () => {
                           padding: "2px 6px",
                         }}
                       >
-                        {portfolio.category.genreName || "분야 없음"}
+                        {portfolio.categoryNm || "분야 없음"}
                       </div>
                       <div
                         style={{
                           ...TYPOGRAPHY.body2["semiBold"],
                         }}
                       >
-                        {portfolio.title}
+                        {portfolio.performanceName || "<공연명>"}
                       </div>
                     </FlexRow>
                     <FlexRow
@@ -481,7 +481,7 @@ const StagePage = () => {
                         ...TYPOGRAPHY.body2["regular"],
                       }}
                     >
-                      공연장명: {portfolio.title || ""}
+                      공연장명: {portfolio.hallName || ""}
                     </FlexRow>
                   </PortfolioBox>
                 ))}

@@ -469,11 +469,11 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
             gap: 8,
           }}
         >
-          {data?.portfolioList.length === 0 && "없음"}
+          {data?.kopisHistoryList.length === 0 && "없음"}
           {data &&
-            data.portfolioList.length > 0 &&
-            data.portfolioList.map((portfolio) => (
-              <PortfolioBox key={portfolio.id}>
+            data.kopisHistoryList.length > 0 &&
+            data.kopisHistoryList.map((portfolio) => (
+              <PortfolioBox key={portfolio.castId}>
                 <FlexRow style={{ gap: 6 }}>
                   <div
                     style={{
@@ -483,14 +483,14 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       padding: "2px 6px",
                     }}
                   >
-                    {portfolio.category.genreName || "분야 없음"}
+                    {portfolio.categoryNm || "분야 없음"}
                   </div>
                   <div
                     style={{
                       ...TYPOGRAPHY.body2["semiBold"],
                     }}
                   >
-                    {portfolio.title || "공연명"}
+                    {portfolio.performanceName || "공연명"}
                   </div>
                 </FlexRow>
                 <FlexRow
@@ -499,6 +499,13 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   }}
                 >
                   {portfolio.startDate} ~ {portfolio.endDate}
+                </FlexRow>
+                <FlexRow
+                  style={{
+                    ...TYPOGRAPHY.body2["regular"],
+                  }}
+                >
+                  공연장명: {portfolio.hallName || ""}
                 </FlexRow>
               </PortfolioBox>
             ))}
