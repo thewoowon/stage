@@ -414,7 +414,7 @@ const StagePage = () => {
                             ...TYPOGRAPHY.body2["regular"],
                           }}
                         >
-                          Youtube
+                          {sns.title || "No Title"}
                         </div>
                         <div
                           onClick={() => router.push(sns.url)}
