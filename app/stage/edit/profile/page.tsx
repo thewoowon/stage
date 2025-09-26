@@ -197,7 +197,7 @@ const ProfileEditPage = () => {
         return response.data;
       },
       staleTime: 5 * 60 * 1000, // 5분
-      enabled: !!user && user.category === 1, // user가 있을 때만 실행
+      enabled: !!user, // user가 있을 때만 실행
     });
 
   const { mutate: mutateArtist } = useMutation({
@@ -253,6 +253,7 @@ const ProfileEditPage = () => {
       formData.append(
         "stageData",
         JSON.stringify({
+          id: artistData.id || 0,
           name: artistData.name || "",
           affiliation: caster || "",
         })
@@ -341,7 +342,7 @@ const ProfileEditPage = () => {
     if (myStageData) {
       setArtist({
         id: myStageData.id,
-        name: myStageData.name,
+        name: myStageData.name || "",
         grade: myStageData.grade || "",
         score: myStageData.score || "",
         instagramLink: myStageData.instagramLink || "",

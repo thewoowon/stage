@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import customAxios from "@/lib/axios";
 import { ArtistDetailResponseType } from "@/type";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { getLinkPreview } from "@/utils";
 
 const LoaderLottie = () => {
   return (
@@ -346,30 +347,34 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           {data?.snsList.length === 0 && "없음"}
           {data &&
             data.snsList.length > 0 &&
-            data.snsList.map((sns) => {
+            data.snsList.map(async (sns) => {
+              const preview = await getLinkPreview(sns.url);
+              console.log(sns.title, sns.url, preview);
+              // type: 1 = youtube, 2 = instagram
               if (sns.type === "1") {
                 return (
-                  <SnsCard
-                    key={sns.id}
-                    onClick={() => {
-                      setImageOverlayVisible(true);
-                    }}
-                  >
+                  <SnsCard key={sns.id}>
                     <div
                       style={{
                         position: "relative",
                         width: "190px",
                         height: "210px",
+                        backgroundColor: COLORS.grayscale[500],
                       }}
+                      // onClick={() => {
+                      //   setImageOverlayVisible(true);
+                      // }}
                     >
-                      <Image
-                        src="/images/oblong-profiles/men/man-1.png"
-                        alt="Instagram"
-                        fill
-                        sizes="100%"
-                        style={{ objectFit: "cover" }}
-                        priority
-                      />
+                      {preview.valid && preview.thumbnail && (
+                        <Image
+                          src={preview.thumbnail}
+                          alt="Instagram"
+                          fill
+                          sizes="100%"
+                          style={{ objectFit: "cover" }}
+                          priority
+                        />
+                      )}
                     </div>
                     <FlexRow
                       style={{
@@ -385,33 +390,42 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       >
                         Youtube
                       </div>
-                      <YoutubeIcon width={20} height={20} />
+                      <div
+                        onClick={() => {
+                          if (sns.url === "https://") return;
+                          if (!sns.url) return;
+                          router.push(sns.url || "");
+                        }}
+                      >
+                        <YoutubeIcon width={20} height={20} />
+                      </div>
                     </FlexRow>
                   </SnsCard>
                 );
               } else {
                 return (
-                  <SnsCard
-                    key={sns.id}
-                    onClick={() => {
-                      setVideoOverlayVisible(true);
-                    }}
-                  >
+                  <SnsCard key={sns.id}>
                     <div
                       style={{
                         position: "relative",
                         width: "190px",
                         height: "210px",
+                        backgroundColor: COLORS.grayscale[500],
                       }}
+                      // onClick={() => {
+                      //   setVideoOverlayVisible(true);
+                      // }}
                     >
-                      <Image
-                        src="/images/oblong-profiles/men/man-1.png"
-                        alt="Instagram"
-                        fill
-                        sizes="100%"
-                        style={{ objectFit: "cover" }}
-                        priority
-                      />
+                      {preview.valid && preview.thumbnail && (
+                        <Image
+                          src={preview.thumbnail}
+                          alt="Instagram"
+                          fill
+                          sizes="100%"
+                          style={{ objectFit: "cover" }}
+                          priority
+                        />
+                      )}
                     </div>
                     <FlexRow
                       style={{
@@ -427,7 +441,15 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       >
                         Instagram
                       </div>
-                      <InstagramIcon width={20} height={20} />
+                      <div
+                        onClick={() => {
+                          if (sns.url === "https://") return;
+                          if (!sns.url) return;
+                          router.push(sns.url || "");
+                        }}
+                      >
+                        <InstagramIcon width={20} height={20} />
+                      </div>
                     </FlexRow>
                   </SnsCard>
                 );
