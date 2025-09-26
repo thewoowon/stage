@@ -48,6 +48,14 @@ customAxios.interceptors.request.use((config) => {
     if (refreshToken) {
       config.headers.Authorization = `Bearer ${refreshToken}`;
     }
+    const user = localStorage.getItem("user");
+
+    if (!user) throw new Error("No user in localStorage for refresh token");
+
+    const userObject = JSON.parse(user);
+    config.data = {
+      userId: userObject.id,
+    };
   } else {
     // ✅ 일반 요청은 accessToken 사용
     const token = getAccessToken();
