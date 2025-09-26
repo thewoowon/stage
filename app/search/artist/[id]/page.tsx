@@ -13,7 +13,6 @@ import { useQuery } from "@tanstack/react-query";
 import customAxios from "@/lib/axios";
 import { ArtistDetailResponseType } from "@/type";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { getLinkPreview } from "@/utils";
 
 const LoaderLottie = () => {
   return (
@@ -347,10 +346,7 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
           {data?.snsList.length === 0 && "없음"}
           {data &&
             data.snsList.length > 0 &&
-            data.snsList.map(async (sns) => {
-              const preview = await getLinkPreview(sns.url);
-              console.log(sns.title, sns.url, preview);
-              // type: 1 = youtube, 2 = instagram
+            data.snsList.map((sns) => {
               if (sns.type === "1") {
                 return (
                   <SnsCard key={sns.id}>
@@ -365,9 +361,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       //   setImageOverlayVisible(true);
                       // }}
                     >
-                      {preview.valid && preview.thumbnail && (
+                      {sns.url && (
                         <Image
-                          src={preview.thumbnail}
+                          src={sns.url}
                           alt="Instagram"
                           fill
                           sizes="100%"
@@ -416,9 +412,9 @@ const ArtistPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       //   setVideoOverlayVisible(true);
                       // }}
                     >
-                      {preview.valid && preview.thumbnail && (
+                      {sns.url && (
                         <Image
-                          src={preview.thumbnail}
+                          src={sns.url}
                           alt="Instagram"
                           fill
                           sizes="100%"
