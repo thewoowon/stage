@@ -425,7 +425,7 @@ const SignInPage = () => {
     name: "",
   });
 
-  const switchSignUpState = (state: (typeof SIGNUP_STATES)[number]) => {
+  const switchSignUpState = () => {
     switch (signUpState) {
       case "role":
         return (
@@ -517,6 +517,7 @@ const SignInPage = () => {
         hallName: data.hallName,
       });
       setSignUpState("result");
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("KOPIS 정보 조회 중 오류가 발생했습니다. 다시 시도해주세요.");
       setSearchResult({
@@ -648,6 +649,9 @@ const SignInPage = () => {
     );
     if (currentIndex > 0) {
       setSignUpState(SIGNUP_STATES[currentIndex - 1]);
+      if (SIGNUP_STATES[currentIndex - 1] === "searching") {
+        searchKopisInfo();
+      }
     } else {
       router.back();
     }
@@ -660,11 +664,7 @@ const SignInPage = () => {
           <LeftChevronIcon fill="#111111" />
         </div>
       </ShadowHeader>
-      {
-        /* 상태에 따른 컴포넌트 렌더링 */ switchSignUpState(
-          signUpState as (typeof SIGNUP_STATES)[number]
-        )
-      }
+      {/* 상태에 따른 컴포넌트 렌더링 */ switchSignUpState()}
       <ButtonWrapper>
         <ButtonBox>
           {signUpState === "result" && (
