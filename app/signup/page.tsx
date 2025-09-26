@@ -397,6 +397,7 @@ const SignInPage = () => {
   const router = useRouter();
   const [signUpState, setSignUpState] = useState("role");
   const { setIsAuthenticated } = useAuth();
+  const [counter, setCounter] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<{
     castId: number;
@@ -416,6 +417,7 @@ const SignInPage = () => {
     hallName: "",
   });
   const [barcode, setBarcode] = useState("");
+  const [open, setOpen] = useState(false);
 
   const [signUpForm, setSignUpForm] = useState<{
     role: "artist" | "caster" | null;
@@ -650,12 +652,21 @@ const SignInPage = () => {
     if (currentIndex > 0) {
       setSignUpState(SIGNUP_STATES[currentIndex - 1]);
       if (SIGNUP_STATES[currentIndex - 1] === "searching") {
+        // 뒤로가서 다시 검색하는 경우
+        setCounter(counter + 1);
         searchKopisInfo();
       }
     } else {
       router.back();
     }
   };
+
+  useEffect(() => {
+    if (signUpState === "result" && !!!searchResult.castId) {
+      // counter의 수가 2이상이고 현재 검색된 결과가 없다면...
+      setOpen(true);
+    }
+  }, [counter, searchResult.castId, signUpState]);
 
   return (
     <Container>
@@ -681,9 +692,31 @@ const SignInPage = () => {
           )}
           <Button onClick={handleNext} disabled={buttonDisabled()}>
             {signUpState === "result" ? "네, 맞습니다" : "확인"}
+            {/* 한 번 더 검색했다면 -> 없다는 것이므로 */}
           </Button>
         </ButtonBox>
       </ButtonWrapper>
+      <Modal style={{ display: open ? "flex" : "none" }}>
+        <MessageBox>
+          <div>
+            혹시, 검색 결과가 없나요?
+            <br />
+            없어도 우선 생성이 가능해요.
+          </div>
+          <MessageBoxButton
+            style={{
+              ...TYPOGRAPHY.body1.medium,
+              backgroundColor: COLORS.grayscale[1100],
+              color: COLORS.grayscale[100],
+            }}
+            onClick={() => {
+              setOpen(false);
+            }}
+          >
+            확인
+          </MessageBoxButton>
+        </MessageBox>
+      </Modal>
     </Container>
   );
 };
@@ -823,4 +856,42 @@ const BarcodeBox = styled.div`
   gap: 3px;
   border: 1px solid ${COLORS.grayscale[500]};
   padding: 17px 14px;
+`;
+
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 26px;
+`;
+
+const MessageBox = styled.div`
+  width: 324px;
+  background-color: white;
+  color: ${COLORS.grayscale[1300]};
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+`;
+
+const MessageBoxButton = styled.div`
+  flex: 1;
+  width: 100%;
+  height: 46px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
 `;
