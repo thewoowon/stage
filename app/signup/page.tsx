@@ -377,10 +377,10 @@ const CompletedView = ({
               gap: "6px",
             }}
           >
-            <div>{barcode}</div>
+            <div>{barcode || "-"}</div>
             <div
               onClick={() => {
-                navigator.clipboard.writeText("202857");
+                navigator.clipboard.writeText(barcode);
                 toast.success("코드가 복사되었습니다.");
               }}
             >
@@ -418,6 +418,7 @@ const SignInPage = () => {
   });
   const [barcode, setBarcode] = useState("");
   const [open, setOpen] = useState(false);
+  const [barcodeOpen, setBarcodeOpen] = useState(false);
 
   const [signUpForm, setSignUpForm] = useState<{
     role: "artist" | "caster" | null;
@@ -551,7 +552,7 @@ const SignInPage = () => {
       }
 
       const data = response.data;
-      setBarcode(data.stageCode || "202857");
+      setBarcode(data.stageCode || "");
       setSignUpState("completed");
     } catch (error) {
       console.error("Error creating artist stage:", error);
@@ -666,6 +667,11 @@ const SignInPage = () => {
       // counter의 수가 2이상이고 현재 검색된 결과가 없다면...
       setOpen(true);
     }
+
+    if (signUpState === "completed" && !!!searchResult.castId) {
+      // 캐스터가 아닌 아티스트인데, 검색된 결과가 없다면...
+      setBarcodeOpen(true);
+    }
   }, [counter, searchResult.castId, signUpState]);
 
   return (
@@ -714,6 +720,30 @@ const SignInPage = () => {
             }}
           >
             확인
+          </MessageBoxButton>
+        </MessageBox>
+      </Modal>
+      <Modal style={{ display: barcodeOpen ? "flex" : "none" }}>
+        <MessageBox>
+          <div>
+            스테이지 코드가 없어도
+            <br />
+            스테이지 참여가 가능해요.
+            <br />
+            시작해볼까요?
+          </div>
+          <MessageBoxButton
+            style={{
+              ...TYPOGRAPHY.body1.medium,
+              backgroundColor: COLORS.grayscale[1100],
+              color: COLORS.grayscale[100],
+            }}
+            onClick={() => {
+              setIsAuthenticated(true);
+              router.push("/");
+            }}
+          >
+            스테이지 시작하기
           </MessageBoxButton>
         </MessageBox>
       </Modal>
