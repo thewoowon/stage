@@ -46,21 +46,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   }, []);
 
-  // ✅ accessToken setter (localStorage 동기화)
   const handleSetAccessToken = useCallback((token: string | null) => {
     setAccessToken(token);
     if (token) localStorage.setItem("accessToken", token);
     else localStorage.removeItem("accessToken");
   }, []);
 
-  // ✅ refreshToken setter (localStorage 동기화)
   const handleSetRefreshToken = useCallback((token: string | null) => {
     setRefreshToken(token);
     if (token) localStorage.setItem("refreshToken", token);
     else localStorage.removeItem("refreshToken");
   }, []);
 
-  // ✅ 초기화: localStorage에서 불러오기
   const initializeAuth = useCallback(async () => {
     try {
       const access = localStorage.getItem("accessToken");
