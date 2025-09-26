@@ -43,15 +43,10 @@ export const attachAuthHelpers = (helpers: {
 // 요청 인터셉터
 customAxios.interceptors.request.use((config) => {
   if (config.url?.includes("/api/token/refresh")) {
-    // ✅ refresh 요청일 때 refreshToken 사용
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = getRefreshToken();
     if (refreshToken) {
       config.headers.Authorization = `Bearer ${refreshToken}`;
     }
-    // const refreshToken = getRefreshToken();
-    // if (refreshToken) {
-    //   config.headers.Authorization = `Bearer ${refreshToken}`;
-    // }
     const user = localStorage.getItem("user");
 
     if (!user) throw new Error("No user in localStorage for refresh token");
@@ -62,8 +57,7 @@ customAxios.interceptors.request.use((config) => {
     };
   } else {
     console.log("Attaching access token to request");
-    const token = localStorage.getItem("accessToken");
-    // const token = getAccessToken();
+    const token = getAccessToken();
     console.log("Access Token:", token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

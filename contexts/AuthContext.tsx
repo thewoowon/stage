@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { attachAuthHelpers } from "@lib/axios";
+import Bounce from "@/components/element/bounce";
 
 type AuthContextType = {
   accessToken: string | null;
@@ -30,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // ✅ logout
   const logout = useCallback(() => {
@@ -116,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
       }}
     >
-      {children}
+      {isLoading ? <Bounce /> : children}
     </AuthContext.Provider>
   );
 };
