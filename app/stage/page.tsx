@@ -1,6 +1,6 @@
 "use client";
 import styled from "@emotion/styled";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { LeftChevronIcon } from "@/components/svg";
 import { useRouter } from "next/navigation";
@@ -41,6 +41,10 @@ const StagePage = () => {
   const [imageOverlayVisible, setImageOverlayVisible] = useState(false);
   const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
 
+  const [thumbnails, setThumbnails] = useState<Record<string, string | null>>(
+    {}
+  );
+
   console.log("user", user);
 
   const { data: myStageData, isLoading: isMyStageLoading } =
@@ -55,7 +59,7 @@ const StagePage = () => {
         return response.data;
       },
       staleTime: 5 * 60 * 1000, // 5분
-      enabled: !!user && user.category === 1, // user가 있을 때만 실행
+      enabled: !!user, // user가 있을 때만 실행
     });
 
   // /api/project/getMyOpenProjectList -> 나의 진행중인 프로젝트 목록
@@ -97,6 +101,28 @@ const StagePage = () => {
       staleTime: 5 * 60 * 1000, // 5분
       enabled: !!user && user.category === 2, // user가 있을 때만 실행
     });
+
+  // ✅ 썸네일 가져오기 함수
+  async function fetchPreview(url: string) {
+    const res = await fetch(`/api/preview?url=${encodeURIComponent(url)}`);
+    return res.json();
+  }
+
+  // ✅ SNS 리스트에 있는 링크들 한번에 처리
+  useEffect(() => {
+    if (!myStageData?.snsList) return;
+
+    (async () => {
+      const results: Record<string, string | null> = {};
+      await Promise.all(
+        myStageData.snsList.map(async (sns) => {
+          const preview = await fetchPreview(sns.url);
+          results[sns.id] = preview.valid ? preview.thumbnail : null;
+        })
+      );
+      setThumbnails(results);
+    })();
+  }, [myStageData?.snsList]);
 
   if (!user) {
     return <div>로그인이 필요합니다.</div>;
@@ -343,91 +369,62 @@ const StagePage = () => {
               {myStageData &&
                 (myStageData?.snsList || []).length > 0 &&
                 myStageData?.snsList.map((sns) => {
-                  if (sns.type === "youtube") {
-                    return (
-                      <SnsCard
-                        key={sns.id}
-                        onClick={() => {
-                          setImageOverlayVisible(true);
+                  const thumbnail = thumbnails[sns.id];
+                  return (
+                    <SnsCard
+                      key={sns.id}
+                      onClick={() => {
+                        // setImageOverlayVisible(true);
+                        // setVideoOverlayVisible(true);
+                        return;
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "relative",
+                          width: "190px",
+                          height: "210px",
+                          backgroundColor: COLORS.grayscale[500],
                         }}
                       >
-                        <div
-                          style={{
-                            position: "relative",
-                            width: "190px",
-                            height: "210px",
-                          }}
-                        >
+                        {thumbnail && (
                           <Image
-                            src="/images/oblong-profiles/men/man-1.png"
-                            alt="Instagram"
+                            src={thumbnail}
+                            alt={sns.type}
                             fill
                             sizes="100%"
                             style={{ objectFit: "cover" }}
                             priority
                           />
-                        </div>
-                        <FlexRow
-                          style={{
-                            width: "100%",
-                            padding: "10px 14px",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <div
-                            style={{
-                              ...TYPOGRAPHY.body2["regular"],
-                            }}
-                          >
-                            Youtube
-                          </div>
-                          <YoutubeIcon width={20} height={20} />
-                        </FlexRow>
-                      </SnsCard>
-                    );
-                  } else {
-                    return (
-                      <SnsCard
-                        key={sns.id}
-                        onClick={() => {
-                          setVideoOverlayVisible(true);
+                        )}
+                      </div>
+                      <FlexRow
+                        style={{
+                          width: "100%",
+                          padding: "10px 14px",
+                          justifyContent: "space-between",
                         }}
                       >
                         <div
                           style={{
-                            position: "relative",
-                            width: "190px",
-                            height: "210px",
+                            ...TYPOGRAPHY.body2["regular"],
                           }}
                         >
-                          <Image
-                            src="/images/oblong-profiles/men/man-1.png"
-                            alt="Instagram"
-                            fill
-                            sizes="100%"
-                            style={{ objectFit: "cover" }}
-                            priority
-                          />
+                          Youtube
                         </div>
-                        <FlexRow
-                          style={{
-                            width: "100%",
-                            padding: "10px 14px",
-                            justifyContent: "space-between",
-                          }}
+                        <div
+                          onClick={() => router.push(sns.url)}
+                          style={{ cursor: "pointer" }}
                         >
-                          <div
-                            style={{
-                              ...TYPOGRAPHY.body2["regular"],
-                            }}
-                          >
-                            Instagram
-                          </div>
-                          <InstagramIcon width={20} height={20} />
-                        </FlexRow>
-                      </SnsCard>
-                    );
-                  }
+                          {sns.type === "youtube" ? (
+                            <YoutubeIcon width={20} height={20} />
+                          ) : (
+                            <InstagramIcon width={20} height={20} />
+                          )}
+                        </div>
+                      </FlexRow>
+                    </SnsCard>
+                  );
                 })}
             </HorizontalThemeScrollContainer>
           </div>
