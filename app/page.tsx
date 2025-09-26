@@ -115,7 +115,7 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]); // ✅ code만 감시 (getAccessToken 의존성 제거)
 
-  if (isAuthenticated && user) {
+  if (isAuthenticated && user && !!user.category) {
     return <SearchMainView />;
   }
 
